@@ -275,10 +275,12 @@ module Hurl::Controllers
       case accept
       when /text\/x?html/
         render
-      else
+      when /(text|application)\/xml/
         @headers['Content-Type'] = 'application/xml charset=utf8'
         @hurl = "<hurl><message>POST url=SITE to create, GET /key to show</message></hurl>"
         render :xml
+      else
+        render
       end
     end
 
@@ -302,12 +304,15 @@ module Hurl::Controllers
       when /text\/x?html/
         @hurl = hurl
         render :result
-      else
+      when /(text|application)\/xml/
         @headers['Content-Type'] = 'application/xml charset=utf8'
         b = Builder::XmlMarkup.new
         x = b.hurl {|url| url.input(iurl); url.result(hurl) }
         @hurl = x.to_s
         render :xml
+      else
+        @hurl = hurl
+        render :result
       end
     end
   end
@@ -352,12 +357,14 @@ end
       case accept
       when /text\/x?html/
         redirect hurl
-      else
+      when /(text|application)\/xml/
         @headers['Content-Type'] = 'application/xml charset=utf8'
         b = Builder::XmlMarkup.new
         x = b.hurl {|url| url.key("#{base_url}#{key}"); url.value(hurl) }
         @hurl = x.to_s
         render :xml
+      else
+        redirect hurl
       end
     end
   end

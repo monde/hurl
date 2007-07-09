@@ -1,0 +1,57 @@
+body {
+  font-family: Optima, Trebuchet, "Trebuchet MS", "Lucida Grande", "Lucida Sans Unicode", sans-serif;
+  font-size:18px;
+  background-color: white;
+  color: black;
+  margin: 2em;
+  width: 800px;
+}
+h1 {
+  font-size: 70px; 
+  letter-spacing: 10px; 
+  margin:0;
+}
+h1 a:link,
+h1 a:visited,
+h1 a:active {
+  color: black;
+}
+h2 {
+  margin:-10px 0 0 0;
+  display: inline;
+  font-size:35px;
+  color: #ffa9fe;
+}
+h3 { 
+  margin:-5px 0 0 30px;
+  font-size: 24px; 
+  color: #696969;
+}
+h4 { 
+  margin:0 0 0 30px;
+}
+small { font-size: 12px; }
+form {
+  display: inline;
+}
+fieldset {
+  border: 0px;
+  width: 700px;
+}
+a { text-decoration:none; }
+a a:link, a:visited, a:active {
+  color: #ff5afd;
+}
+#url {
+  font-size: 1.0em;
+  color: #000000;
+  width: 50%;
+  margin: 0 0 0 0;
+  display: inline;
+}
+
+#url.empty {
+  text-align: center;
+  color: #999999;
+}
+

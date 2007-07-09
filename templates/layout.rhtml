@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
+<html lang="en" xml:lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <title><%= @title %></title>
+  <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
+  <meta name="description" content="create very small urls and retreive long urls"/>
+  <meta name="description" content="REST small short url universal resource locator"/>
+  <link href="/favicon.ico" rel="favicon" type="image/gif" />
+  <link type="text/css" media="screen" href="/static/style.css" rel="stylesheet"/>
+  <script src="/static/hurl.js" type="text/javascript"></script>
+</head>
+<body>
+  <h1><a href="<%= @base_url %>"><%= @title %></a></h1>
+  <h2>throw </h2><small>(very small)</small><h2> urls</h2>
+  <form id="hurlform" method="post" action="/"><fieldset><label>big -&gt; </label><input type="text" class="empty" id="url" name="url" size="30"/><label> -&gt; </label><input type="submit" name="Submit" value="SUPER SMALL ME!"/></fieldset></form>
+
+    <%= content %>
+  <p><a href="http://sas.quat.ch/">sasquatch</a> goes <a href="http://camping.rubyforge.org/files/README.html">Camping</a></p>
+  <p><small>w/ application/xml &amp; REST</small></p>
+</body>
+</html>

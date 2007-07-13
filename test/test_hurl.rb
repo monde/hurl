@@ -1,3 +1,9 @@
+#--
+# Copyright (c) 2007 by Mike Mondragon (mikemondragon@gmail.com)
+#
+# Please see the README.txt file for licensing information.
+#++
+
 require 'rubygems'
 require 'mosquito'
 require File.dirname(__FILE__) + "/../hurl"
@@ -9,7 +15,7 @@ class TestHurl < Camping::FunctionalTest
 
   fixtures :hurl_urls
 
-  def test_index
+  def test_default_index_should_have_form
     get 
     assert_response :success
     form = <<FORM
@@ -18,7 +24,7 @@ FORM
     assert_match_body %r!#{form}!
   end
 
-  def test_xml_index
+  def test_accept_xml_should_get_xml
     @request.set("HTTP_ACCEPT", "application/xml")
     get 
     assert_response :success
@@ -28,17 +34,19 @@ FORM
     assert_equal response, @response.body
   end
 
-  def test_unknown_accept_index
+  def test_should_respond_with_test_html_when_accept_not_known
     @request.set("HTTP_ACCEPT", "hello/world")
     get 
     assert_response :success
-    response = <<FORM
-<hurl><message>POST url=SITE to create, GET /key to show</message></hurl>
+    form = <<FORM
+<form id="hurlform" method="post" action="/"><fieldset><label>big -&gt; </label><input type="text" class="empty" id="url" name="url" size="30"/><label> -&gt; </label><input type="submit" name="Submit" value="SUPER SMALL ME!"/></fieldset></form>
 FORM
-    assert_equal response, @response.body
+     # Hurl should respon
+     assert_equal "text/html", @response.headers["Content-Type"]
+     assert_match_body %r!#{Regexp.escape(form)}!
   end
 
-  def test_post
+  def test_post_should_have_results
     assert_difference(Url, :count, 1) do 
       post '', :url => 'http://sas.quat.ch/' 
     end
@@ -47,7 +55,7 @@ FORM
     assert_match_body %r!#{results}!
   end
 
-  def test_xml_post
+  def test_xml_post_should_respond_with_xml
     @request.set("HTTP_ACCEPT", "application/xml")
     assert_difference(Url, :count, 1) do 
       post '', :url => 'http://sas.quat.ch/' 
@@ -58,14 +66,14 @@ FORM
     assert m[1]
   end
 
-  def test_bad_post
+  def test_bad_html_input_should_400
     assert_difference(Url, :count, 0) do 
       post '', :url => '' 
     end
     assert_response "400"
   end
 
-  def test_bad_xml_post
+  def test_bad_xml_input_should_400
     @request.set("HTTP_ACCEPT", "application/xml")
     assert_difference(Url, :count, 0) do 
       post '', :url => '' 
@@ -73,7 +81,7 @@ FORM
     assert_response "400"
   end
 
-  def test_get
+  def test_hurled_url_should_be_the_same_unhurled
     # set up a real post
     to_hurl = "http://sas.quat.ch/"
     post '', :url => to_hurl
@@ -88,7 +96,7 @@ FORM
     assert_equal @response.headers['Location'].to_s, to_hurl
   end
 
-  def test_xml_get
+  def test_xml_request_should_get_xml
     @request.set("HTTP_ACCEPT", "application/xml")
     to_hurl = "http://sas.quat.ch/"
     post '', :url => to_hurl
@@ -105,7 +113,7 @@ FORM
     assert m
   end
 
-  def test_bad_get
+  def test_bad_request_should_400
     # bad gets are rendered not redirected
     get "/j@nkeD"
     assert_response "400"
@@ -114,7 +122,7 @@ FORM
     assert_response "400"
   end
 
-  def test_bad_xml_get
+  def test_bad_xml_request_should_400
     @request.set("HTTP_ACCEPT", "application/xml")
     # bad gets are rendered not redirected
     get "/j@nkeD"
@@ -148,7 +156,7 @@ end
 
 class TestBase62 < Camping::UnitTest
   include Base62
-  def test_alphabet_characters_only_validate
+  def test_alphabet_characters_should_only_validate
     alphabet = (('0'[0]..'9'[0]).collect << 
                 ('A'[0]..'Z'[0]).collect << 
                 ('a'[0]..'z'[0]).collect).flatten
@@ -169,7 +177,7 @@ class TestBase62 < Camping::UnitTest
     assert_equal nil, base62_decode("asfdsa!!!!!!!!!!!")
   end
 
-  def test_edge_62_to_the_0_convertions
+  def test_edge_62_to_the_0_convertions_should_be_valid
     (0...62).each do |i|
       encode = base62_encode(i)
       decode = base62_decode(encode)
@@ -177,7 +185,7 @@ class TestBase62 < Camping::UnitTest
     end
   end
 
-  def test_edge_62_to_the_n_convertions
+  def test_edge_62_to_the_n_convertions_should_be_valid
     (0...3).each do |p|
       n = 62 ** p
       (0...62).each do |i|

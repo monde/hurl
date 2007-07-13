@@ -1,5 +1,6 @@
 hurl
     by Mike Mondragon
+    mikemondragon@gmail.com
     http://blog.mondragon.cc/
 
 == DESCRIPTION:
@@ -26,6 +27,10 @@ Enter URL, get back even smaller URL.
 
 * gem install hurl
 
+When running in testing mode Hurl will use a local SQLite3 database.  When
+running in produciton mode Hurl will use a MySQL database.  See the 
+db migration to examine how the db is tuned based on the running mode.
+
 The Hurl will a prepopulate 3906 keys (62^1 + 62^2) when it itializes
 its database with a migration.
 
@@ -39,6 +44,7 @@ ruby admin/make_keys.rb 4 > /tmp/hurl_keys-4.sql
 Then load those keys your db, the example db is named hurl:
 mysql -u root -p hurl < /tmp/hurl_keys-3.sql
 mysql -u root -p hurl < /tmp/hurl_keys-4.sql
+note: 62^4 keys takes up about 750MB disk space with the MyISAM engine.
 
 See http://camping.rubyforge.org/files/README.html for more information about
 Camping applications.

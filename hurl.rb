@@ -195,7 +195,7 @@ module Hurl::Models
       #hurl_urls
       case Hurl::HENV
       when :production
-        # coupled to MySQL MyISAM
+        # coupled to MySQL MyISAM for performance
         create_table :hurl_urls, :options => 'engine=MyISAM', :force => true do |t|
           # make varchar care about case sensitivity
           t.columns << "\`key\` varchar(#{Url::MAX_KEY_WIDTH}) BINARY NOT NULL"

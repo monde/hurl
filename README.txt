@@ -59,6 +59,16 @@ that is SysV init.d shell based.  For its use see:
 http://blog.mondragon.cc/articles/2007/07/04/small-urls-with-camping
 http://blog.mondragon.cc/articles/2007/07/05/rv2-camping-on-gentoo
 
+Testing:
+rake test
+or
+autotest
+
+Run (in testing mode)
+rake hurl
+or
+camping hurl.rb
+
 == LICENSE:
 
 rv_harness.rb and rv_harness2.rb are AFL licensed works dervived from

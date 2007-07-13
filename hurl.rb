@@ -22,7 +22,7 @@ ENV['CAMPING_ENV'] ||= 'testing'
 Camping.goes :Hurl
 
 ##
-# Hurl is a campling application that makes small urls which are
+# Hurl is a camping application that makes small urls which are
 # used to represent long urls
 
 module Hurl
@@ -62,9 +62,9 @@ module Hurl
 end
 
 ##
-# Base62 is a model for mixing in base 62 number operations.
+# Base62 is a module for mixing in base 62 number operations.
 # It encodes a base 10 number to base 62, decodes a base 62 number
-# to base 10, and verifies that number is valid withing the base
+# to base 10, and verifies that number is valid within the base
 # 62 alphabet that it uses.  The base 62 alphabet used is
 # 0-9,A-Z,a-z
 
@@ -192,7 +192,6 @@ module Hurl::Models
     extend Base62
     def self.up
 
-      #hurl_urls
       case Hurl::HENV
       when :production
         # coupled to MySQL MyISAM for performance
@@ -214,7 +213,6 @@ module Hurl::Models
       end
       add_index :hurl_urls, :key, :unique => true
 
-      #hurl_keys
       case Hurl::HENV
       when :production
         # coupled to MySQL MyISAM
@@ -269,8 +267,9 @@ module Hurl::Controllers
 
   ##
   # Get the main page
-  # Will return HTML if the requester acceptes text/html,
-  # will return application/xml otherwise.
+  # Will return HTML if the requester accepts text/html,
+  # will return application/xml otherwise only when application/xml
+  # or text/xml is requested, returns text/html otherwise
   
   class Index < R '/'
 
@@ -323,7 +322,7 @@ module Hurl::Controllers
     end
   end
 
-# when not in the RV we'll serve static conent ourselves
+# when not in the RV we'll serve static content ourselves
 unless File.basename($0) =~ /rv.?_harness.rb/
 
   ##

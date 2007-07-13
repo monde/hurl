@@ -27,12 +27,10 @@ Enter URL, get back even smaller URL.
 
 * gem install hurl
 
-When running in testing mode Hurl will use a local SQLite3 database.  When
-running in produciton mode Hurl will use a MySQL database.  See the 
-db migration to examine how the db is tuned based on the running mode.
-
 The Hurl will a prepopulate 3906 keys (62^1 + 62^2) when it itializes
-its database with a migration.
+its database with a migration in production mode.
+
+== Administrative
 
 Use the make_keys.rb script to make additional prepopulated keys.  For 
 instance make 238328 unique keys:
@@ -46,9 +44,6 @@ mysql -u root -p hurl < /tmp/hurl_keys-3.sql
 mysql -u root -p hurl < /tmp/hurl_keys-4.sql
 note: 62^4 keys takes up about 750MB disk space with the MyISAM engine.
 
-See http://camping.rubyforge.org/files/README.html for more information about
-Camping applications.
-
 Also in the admin directory is an example RV harness, see "rv, a tool for 
 luxurious camping" by Evan Weaver for more information:
 http://blog.evanweaver.com/articles/2006/12/19/rv-a-tool-for-luxurious-camping
@@ -59,15 +54,29 @@ that is SysV init.d shell based.  For its use see:
 http://blog.mondragon.cc/articles/2007/07/04/small-urls-with-camping
 http://blog.mondragon.cc/articles/2007/07/05/rv2-camping-on-gentoo
 
-Testing:
+When running in testing mode Hurl will use a local SQLite3 database.  When
+running in produciton mode Hurl will use a MySQL database.  See the 
+db migration to examine how the db is tuned based on the running mode.
+
+See http://camping.rubyforge.org/files/README.html for more information about
+Camping applications.
+
+== Running
+
+In testing mode:
+rake hurl
+or
+camping hurl.rb
+
+In production mode:
+see rv and RV2 notes
+
+== Test
+
 rake test
 or
 autotest
 
-Run (in testing mode)
-rake hurl
-or
-camping hurl.rb
 
 == LICENSE:
 

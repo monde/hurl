@@ -26,12 +26,14 @@ Camping.goes :Hurl
 # used to represent long urls
 
 module Hurl
-  include Camping::Session # we are only including this so mosquito tests work
 
   VERSION = '1.0.0'
 
   # the server environment Hurl is running in
   HENV = ENV['CAMPING_ENV'].eql?('production') ? :production : :test
+
+  # we are only including this so mosquito tests work
+  include Camping::Session if HENV == :test
 
   ##
   # helper to render our pages

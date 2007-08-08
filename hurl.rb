@@ -277,25 +277,25 @@ module Hurl::Controllers
 
     # get the default page (show)
     def get
-      accept = env.ACCEPT.nil? ? env.HTTP_ACCEPT : env.ACCEPT
-      # honor html first otherwise its application/xml
-      case accept
-      when /text\/x?html/
-        # special case for the javascript toolbar
-        hurl = @input[:url]
-        unless hurl.nil?
-          hurl = "#{base_url}#{Url.put(hurl)}"
-          @hurl = hurl
-          render :result
+      # special case for the javascript toolbar
+      hurl = @input[:url]
+      unless hurl.nil?
+        hurl = "#{base_url}#{Url.put(hurl)}"
+        @hurl = hurl
+        render :result
+      else
+        accept = env.ACCEPT.nil? ? env.HTTP_ACCEPT : env.ACCEPT
+        # honor html first otherwise its application/xml
+        case accept
+        when /text\/x?html/
+          render
+        when /(text|application)\/xml/
+          @headers['Content-Type'] = 'application/xml charset=utf8'
+          @hurl = "<hurl><message>POST url=SITE to create, GET /key to show</message></hurl>"
+          render :xml
         else
           render
         end
-      when /(text|application)\/xml/
-        @headers['Content-Type'] = 'application/xml charset=utf8'
-        @hurl = "<hurl><message>POST url=SITE to create, GET /key to show</message></hurl>"
-        render :xml
-      else
-        render
       end
     end
 

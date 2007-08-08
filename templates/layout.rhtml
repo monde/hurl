@@ -13,11 +13,19 @@
 <body>
   <h1><a href="<%= @base_url %>"><%= @title %></a></h1>
   <h2>throw </h2><small>(very small)</small><h2> urls</h2>
+  <br/>
   <form id="hurlform" method="post" action="/"><fieldset><label>big -&gt; </label><input type="text" class="empty" id="url" name="url" size="30"/><label> -&gt; </label><input type="submit" name="Submit" value="SUPER SMALL ME!"/></fieldset></form>
-
     <%= content %>
-  <p><small>w/ application/xml &amp; REST</small></p>
-  <p>Hurl goes <a href="http://camping.rubyforge.org/files/README.html">Camping</a>, <a href="http://blog.mondragon.cc/articles/2007/07/04/small-urls-with-camping">announcement &amp; source</a>.</p>
+  <div id="tool">
+  <h3>Add HURL to your favorite browser</h3>
+  <p>Drag the <strong>HURL this link</strong> below to the bookmarks toolbar of your browser and create HURLs quickly:</p>
+  <p><a href="javascript:void(location.href='<%= base_url %>?url='+location.href)">HURL this Link</a></p>
+  </div>
+  <div id="about">
+  <h3>About</h3>
+  <p><small>w/ application/xml &amp; REST</small><br/>
+  Hurl goes <a href="http://camping.rubyforge.org/files/README.html">Camping</a>, <a href="http://blog.mondragon.cc/articles/2007/07/04/small-urls-with-camping">announcement &amp; source</a>.</p>
+  </div>
 
 </body>
 </html>

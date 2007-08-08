@@ -281,7 +281,15 @@ module Hurl::Controllers
       # honor html first otherwise its application/xml
       case accept
       when /text\/x?html/
-        render
+        # special case for the javascript toolbar
+        hurl = @input[:url]
+        unless hurl.nil?
+          hurl = "#{base_url}#{Url.put(hurl)}"
+          @hurl = hurl
+          render :result
+        else
+          render
+        end
       when /(text|application)\/xml/
         @headers['Content-Type'] = 'application/xml charset=utf8'
         @hurl = "<hurl><message>POST url=SITE to create, GET /key to show</message></hurl>"
@@ -352,7 +360,9 @@ end
 
   class Translate < R '/(.+)'
     def get(key)
+
       accept = env.ACCEPT.nil? ? env.HTTP_ACCEPT : env.ACCEPT
+
       hurl = Url.get(key)
       # bad input
       if hurl.nil?

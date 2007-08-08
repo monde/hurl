@@ -20,12 +20,12 @@ h2 {
   margin:-10px 0 0 0;
   display: inline;
   font-size:35px;
-  color: #ffa9fe;
+  color: #faf;
 }
 h3 { 
   margin:-5px 0 0 30px;
   font-size: 24px; 
-  color: #696969;
+  color: #777;
 }
 h4 { 
   margin:0 0 0 30px;
@@ -52,6 +52,50 @@ a a:link, a:visited, a:active {
 
 #url.empty {
   text-align: center;
-  color: #999999;
+  color: #999;
 }
-
+#results {
+  background: #fdf;
+  margin: 1em;
+  padding: 5px;
+}
+#results h3 { 
+  margin:-5px 0 0 10px;
+  font-size: 24px; 
+  color: black;
+}
+#results p { 
+  font-size: 12px; 
+  color: black;
+}
+#tool {
+  background: #ccc;
+  margin: 1em;
+  padding: 5px;
+}
+#tool h3 { 
+  margin:-5px 0 0 10px;
+  font-size: 24px; 
+  color: black;
+}
+#tool p { 
+  font-size: 12px; 
+  color: black;
+}
+#tool a { 
+  font-size: 16px; 
+}
+#about {
+  background: #fdf;
+  margin: 1em;
+  padding: 5px;
+}
+#about h3 { 
+  margin:-5px 0 0 10px;
+  font-size: 24px; 
+  color: black;
+}
+#about p { 
+  font-size: 16px; 
+  color: black;
+}

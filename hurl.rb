@@ -167,7 +167,7 @@ module Hurl::Models
       ).each do |u|
         key = u.key
         u.destroy
-        id = (1...Url.minimum(:id)).to_a.last
+        id = Key.minimum(:id) - 1
         Key.create(:id => id, :key => key)
       end
     end

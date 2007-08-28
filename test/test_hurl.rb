@@ -11,6 +11,16 @@ require File.dirname(__FILE__) + "/../hurl"
 Hurl.create
 include Hurl::Models
 
+module TestHelper
+  include Base62
+
+  def create_url(options={})
+    key = base62_encode(rand(62 ** 4))
+    Url.create({ :key => key,
+                 :url => "http://sas.quat.ch/"}.merge(options))
+  end
+end
+
 class TestHurl < Camping::FunctionalTest
 
   fixtures :hurl_urls
@@ -131,26 +141,54 @@ FORM
     get "/jAnkeD"
     assert_response "400"
   end
+
+  def test_recycle_should_give_some_stats
+    get "/recycle"
+    assert_response :success
+    assert_match_body /keys recycled/
+  end
+end
+
+class TestUrl < Camping::UnitTest
+  include TestHelper
+
+  def test_recycle_should_clean_out_junk_urls
+    count = Url.count
+    keys = Key.count
+
+    # one or less hits and url was created more than a month ago should be recycled
+    url = create_url()
+    url.created_at = 31.days.ago
+    url.hits = 1
+    url.save
+    assert_equal keys, Key.count
+    assert_equal count + 1, Url.count
+    Url.recycle
+    assert_equal keys + 1, Key.count
+    assert_equal count, Url.count
+
+    url = create_url()
+    url.created_at = 29.days.ago
+    url.hits = 0
+    url.save
+    assert_equal count + 1, Url.count
+    Url.recycle
+    assert_equal keys + 1, Key.count
+    assert_equal count + 1, Url.count
+  end
 end
 
 class TestAdd < Camping::UnitTest
   include Base62
+  include TestHelper
 
   fixtures :hurl_urls
 
   def test_url_create_should_be_valid
-    hurl = create()
+    hurl = create_url()
     assert hurl.valid?
   end
-
-private
-
-  def create(options={})
-    key = base62_encode(rand(62 ** 4))
-    Url.create({ :key => key,
-                 :url => "http://sas.quat.ch/"}.merge(options))
-  end
-    
+ 
 end
 
 

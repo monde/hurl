@@ -159,6 +159,20 @@ module Hurl::Models
     MAX_KEY_WIDTH = 6 # 62 ** 6 == 58B
 
     ##
+    # Recycle urls older than a week with one or less hits back to the available keys
+
+    def self.recycle
+      Url.find(:all, :order => "id desc",
+               :conditions => ["hits <= ? and created_at < ?", 1, 30.days.ago]
+      ).each do |u|
+        key = u.key
+        u.destroy
+        id = (1...Url.minimum(:id)).to_a.last
+        Key.create(:id => id, :key => key)
+      end
+    end
+
+    ##
     # Takes a URL and returns a unique base62 key for the URL and
     # saves the URL and its key to the database
 
@@ -226,6 +240,9 @@ module Hurl::Models
         # sqlite3 friendly
         create_table :hurl_keys, :force => true do |t|
           t.column :key,         :string, :limit => Url::MAX_KEY_WIDTH, :null => false
+
+
+
         end
       end
 
@@ -354,6 +371,20 @@ unless File.basename($0) =~ /rv.?_harness.rb/
   end
 
 end
+
+  ##
+  # Recycle junk URLs ... they are often just testers by people trying out
+  # the service.  This action should be protected with basic authentication,
+  # etc.
+
+  class Admin < R '/recycle'
+    def get
+      @headers['Content-Type'] = 'text/plain charset=utf8'
+      keys = Key.count
+      Url.recycle
+      return "#{Key.count-keys} keys recycled"
+    end
+  end
 
   ##
   # Anything else is a lookup (show) in our world

@@ -41,6 +41,8 @@ module Hurl
   def render(m=nil)
     @title =  "hurl it"
     @base_url = base_url
+    # if one has google analytics javascript put it in the urchin.txt file
+    @urchin = IO.read("#{File.dirname(__FILE__)}/templates/urchin.txt") rescue nil
     content = ERB.new(
       IO.read("#{File.dirname(__FILE__)}/templates/#{m}.rhtml")
       ).result(binding) if m 
@@ -159,11 +161,12 @@ module Hurl::Models
     MAX_KEY_WIDTH = 6 # 62 ** 6 == 58B
 
     ##
-    # Recycle urls older than a week with one or less hits back to the available keys
+    # Recycle urls older than a week with one or less hits back to the available keys.
+    # The /recycle URI should be protected with an autorization scheme.
 
     def self.recycle
-      Url.find(:all, :order => "id desc",
-               :conditions => ["hits <= ? and created_at < ?", 1, 30.days.ago]
+      find(:all, :order => "id desc",
+           :conditions => ["hits <= ? and created_at < ?", 1, 30.days.ago]
       ).each do |u|
         key = u.key
         u.destroy
@@ -180,7 +183,7 @@ module Hurl::Models
        key = Key.find(:first, :order => "id ASC")
        Key.delete(key.id)
        # keep it simple and blow up in front of the user on failures
-       self.create!(:key => key.key, :url => url)
+       create!(:key => key.key, :url => url)
        key.key
     end
 
@@ -240,9 +243,6 @@ module Hurl::Models
         # sqlite3 friendly
         create_table :hurl_keys, :force => true do |t|
           t.column :key,         :string, :limit => Url::MAX_KEY_WIDTH, :null => false
-
-
-
         end
       end
 
@@ -269,14 +269,13 @@ module Hurl::Models
         a = (lower...upper).collect.sort_by { rand }
         a.each do |i|
           key = base62_encode(i)
-          Key.create!(:key => key)
+          Key.create!(:key => key) unless key == 'it' # 'it' is special key
         end
       end
     end
   end
 
 end
-
 
 ##
 # Hurl content controllers, the order of their loading is used
@@ -295,10 +294,8 @@ module Hurl::Controllers
     # get the default page (show)
     def get
       # special case for the javascript toolbar
-      hurl = @input[:url]
-      unless hurl.nil?
-        hurl = "#{base_url}#{Url.put(hurl)}"
-        @hurl = hurl
+      unless @input[:url].nil?
+        @hurl = url_to_hurl(@input[:url])
         render :result
       else
         accept = env.ACCEPT.nil? ? env.HTTP_ACCEPT : env.ACCEPT
@@ -319,18 +316,16 @@ module Hurl::Controllers
     # add a url (create)
     def post
       accept = env.ACCEPT.nil? ? env.HTTP_ACCEPT : env.ACCEPT
-      iurl = @input[:url] ||= ""
-      iurl.strip!
 
       # bad input
-      if iurl.length <= 0
+      if (@input[:url] || "").length <= 0
         @headers['Content-Type'] = 'text/plain charset=utf8'
         @status = "400"
         return "400 - Invalid url parameter"
       end
 
       # good input
-      hurl = "#{base_url}#{Url.put(iurl)}"
+      hurl = url_to_hurl(@input[:url])
 
       case accept
       when /text\/x?html/
@@ -339,13 +334,25 @@ module Hurl::Controllers
       when /(text|application)\/xml/
         @headers['Content-Type'] = 'application/xml charset=utf8'
         b = Builder::XmlMarkup.new
-        x = b.hurl {|url| url.input(iurl); url.result(hurl) }
+        x = b.hurl {|url| url.input(@input[:url]); url.result(hurl) }
         @hurl = x.to_s
         render :xml
       else
         @hurl = hurl
         render :result
       end
+    end
+
+    private
+
+    ##
+    # turn a url to a hurl like http://rubyforge.org/ -> http://hurl.it/foo
+
+    def url_to_hurl(url)
+      # setup the default url no matter what
+      Url.create!(:key => 'it', :url => base_url) if Url.count(:conditions => "key = 'it'") == 0
+
+      ( url =~ /^#{Regexp.escape(base_url)}/ ) ? "#{base_url}it" : "#{base_url}#{Url.put(url)}"
     end
   end
 
@@ -444,4 +451,5 @@ end
 
   Hurl::Models.create_schema
   Camping::Models::Session.create_schema
+
 end

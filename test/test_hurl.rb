@@ -147,6 +147,13 @@ FORM
     assert_response :success
     assert_match_body /keys recycled/
   end
+
+  def test_urchin_included
+    get "/"
+    assert_response :success
+    assert_match_body /put Google Analytics urin code in templates\/urchin.txt/
+  end
+
 end
 
 class TestUrl < Camping::UnitTest

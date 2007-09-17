@@ -15,7 +15,7 @@ require 'builder'
 require 'mime/types'
 require 'camping'
 require 'camping/db'
-require 'camping/session'
+require 'camping/session' unless ENV['CAMPING_ENV'] == 'production'
 
 ENV['CAMPING_ENV'] ||= 'testing'
 
@@ -30,7 +30,7 @@ module Hurl
   VERSION = '1.0.0'
 
   # the server environment Hurl is running in
-  HENV = ENV['CAMPING_ENV'].eql?('production') ? :production : :test
+  HENV = ENV['CAMPING_ENV'] == 'production' ? :production : :test
 
   # we are only including this so mosquito tests work
   include Camping::Session if HENV == :test
@@ -350,7 +350,8 @@ module Hurl::Controllers
 
     def url_to_hurl(url)
       # setup the default url no matter what
-      Url.create!(:key => 'it', :url => base_url) if Url.count(:conditions => "key = 'it'") == 0
+      conditions = Hurl::HENV == :production ? "\`key\` = 'it'" : "key = 'it'"
+      Url.create!(:key => 'it', :url => base_url) if Url.count(:conditions => conditions) == 0
 
       ( url =~ /^#{Regexp.escape(base_url)}/ ) ? "#{base_url}it" : "#{base_url}#{Url.put(url)}"
     end
@@ -450,6 +451,6 @@ unless File.basename($0) =~ /rv.?_harness.rb/
 end
 
   Hurl::Models.create_schema
-  Camping::Models::Session.create_schema
+  Camping::Models::Session.create_schema unless ENV['CAMPING_ENV'] == 'production'
 
 end

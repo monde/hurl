@@ -4,21 +4,17 @@
 # Please see the README.txt file for licensing information.
 #++
 
-require 'rubygems'
-require 'mosquito'
-require File.dirname(__FILE__) + "/../hurl"
-require File.dirname(__FILE__) + "/../hurl/base62"
-require File.dirname(__FILE__) + "/../hurl/models"
+require File.dirname(__FILE__) + '/test_helper'
 
-Hurl.create
+include Base62
 include Hurl::Models
 
 module TestHelper
-  include Base62
 
   def create_url(options={})
-    key = base62_encode(rand(62 ** 4))
-    Url.create({ :key => key,
+    key = Key.find(:first, :order => "id ASC")
+    Key.destroy(key.id)
+    Url.create({ :key => key.key,
                  :url => "http://sas.quat.ch/"}.merge(options))
   end
 end
@@ -26,34 +22,80 @@ end
 class TestUrl < Camping::UnitTest
   include TestHelper
 
-  def test_recycle_should_clean_out_junk_urls
+  def test_recycle_should_clean_out_junk_and_dangling_urls_with_defaults
     count = Url.count
     keys = Key.count
 
-    # one or less hits and url was created more than a month ago should be recycled
     url = create_url()
-    url.created_at = 31.days.ago
-    url.hits = 1
+    days_ago = 30
+    hits = 0
+
+    # the created key will be within the threshold to recycle
+    url.created_at = Time.now.ago((days_ago + 1).days)
+    url.hits = hits
     url.save
-    assert_equal keys, Key.count
+    min_key_id = Key.minimum(:id)
+
+    assert_equal keys - 1, Key.count
     assert_equal count + 1, Url.count
-    Url.recycle
-    assert_equal keys + 1, Key.count
+    Url.recycle() # default with no args
+    assert_equal keys, Key.count
     assert_equal count, Url.count
+    # the recycled key has to go to the of front (minimum) keys id
+    assert_equal Key.minimum(:id), min_key_id - 1
+  end
+
+  def test_recycle_should_clean_out_junk_and_dangling_urls
+    count = Url.count
+    keys = Key.count
 
     url = create_url()
-    url.created_at = 29.days.ago
-    url.hits = 0
+    days_ago = 10
+    hits = 5
+
+    # the created key will be within the threshold to recycle
+    url.created_at = Time.now.ago((days_ago + 1).days)
+    url.hits = hits
     url.save
+    min_key_id = Key.minimum(:id)
+
+    assert_equal keys - 1, Key.count
     assert_equal count + 1, Url.count
-    Url.recycle
-    assert_equal keys + 1, Key.count
+    Url.recycle(:days_ago => days_ago, :hits => hits)
+    assert_equal keys, Key.count
+    assert_equal count, Url.count
+    # the recycled key has to go to the of front (minimum) keys id
+    assert_equal Key.minimum(:id), min_key_id - 1
+
+    # the created key will not meet the criteria to recycle
+    url = create_url()
+    min_key_id = Key.minimum(:id)
+
+    assert_equal keys - 1, Key.count
     assert_equal count + 1, Url.count
+    Url.recycle(:days_ago => days_ago - 1, :hits => hits - 1)
+    assert_equal keys - 1, Key.count
+    assert_equal count + 1, Url.count
+    assert_equal Key.minimum(:id), min_key_id
+  end
+
+  def test_recycle_should_clean_out_urls_by_id
+    count = Url.count
+    keys = Key.count
+    url = create_url()
+    min_key_id = Key.minimum(:id)
+
+    assert_equal keys - 1 , Key.count
+    assert_equal count + 1, Url.count
+    Url.recycle(:id => url.id)
+    assert_equal keys, Key.count
+    assert_equal count, Url.count
+    # the recycled key has to go to the of front (minimum) keys id
+    assert_equal Key.minimum(:id), min_key_id - 1
   end
 end
 
 class TestAdd < Camping::UnitTest
-  include Base62
   include TestHelper
 
   fixtures :hurl_urls

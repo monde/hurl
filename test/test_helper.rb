@@ -4,5 +4,8 @@
 # Please see the README.txt file for licensing information.
 #++
 
-require File.dirname(__FILE__) + '/test_helper'
+require 'rubygems'
+require 'mosquito'
+require File.dirname(__FILE__) + "/../hurl"
 
+Hurl.create

@@ -22,6 +22,23 @@ end
 class TestUrl < Camping::UnitTest
   include TestHelper
 
+  def test_recycle_should_recycle_urls_with_conditions
+    count = Url.count
+    keys = Key.count
+
+    bad_url = "http://www.example.com/bad"
+    url = create_url(:url => bad_url)
+    min_key_id = Key.minimum(:id)
+
+    assert_equal keys - 1, Key.count
+    assert_equal count + 1, Url.count
+    Url.recycle(:conditions => ['url LIKE ?', "#{bad_url}%"]) # default with no args
+    assert_equal keys, Key.count
+    assert_equal count, Url.count
+    # the recycled key has to go to the of front (minimum) keys id
+    assert_equal Key.minimum(:id), min_key_id - 1
+  end
+
   def test_recycle_should_clean_out_junk_and_dangling_urls_with_defaults
     count = Url.count
     keys = Key.count

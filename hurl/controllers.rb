@@ -125,12 +125,29 @@ end
   # the service.  This action should be protected with basic authentication,
   # etc.
 
-  class Admin < R '/recycle'
-    def post
-      @headers['Content-Type'] = 'text/plain charset=utf8'
-      keys = Key.count
-      Url.recycle(@input)
-      return "#{Key.count-keys} keys recycled"
+  class Admin < R '/admin/(\w+)'
+
+    def post(*args)
+      accept = env.ACCEPT.nil? ? env.HTTP_ACCEPT : env.ACCEPT
+      unless args[0] == 'recycle'
+        @status = '412'
+        return '412 - Precondition Failed'
+      end
+
+      recycled = Url.recycle(@input)
+      result = "#{recycled} keys recycled"
+
+      case accept
+      when /(text|application)\/xml/
+        @headers['Content-Type'] = 'application/xml charset=utf8'
+        b = Builder::XmlMarkup.new
+        x = b.hurl {|message| message.message(result); message.recycled(recycled) }
+        @hurl = x.to_s
+        render :xml, false
+      else
+        @headers['Content-Type'] = 'text/plain charset=utf8'
+        return result
+      end
     end
   end
 

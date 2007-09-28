@@ -60,7 +60,7 @@ def Hurl.create
        :database => 'db/hurl.db'
     end
 
-    #Camping::Models::Base.logger = Logger.new("hurl.log")
+    Camping::Models::Base.logger = Logger.new("hurl.log") unless Hurl::HENV == :production
     Camping::Models::Base.threaded_connections = false
   end
 

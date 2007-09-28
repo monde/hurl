@@ -41,25 +41,30 @@ module Hurl::Models
     # to recyle dangling urls by
 
     def self.recycle(options = {})
+      recycled = 0
       if options[:id].is_a? Fixnum
         recycle_url find(options[:id])
+        recycled = 1
       elsif options[:conditions]
         find(:all, :order => "id desc",
              :conditions => options[:conditions]
-        ).each do |u|
+        ).each_with_index do |u,i|
           recycle_url u
+          recycled = i
         end
       else
-        days_ago = options[:days_ago] || 30
+        days_ago = options[:days_ago].to_i || 30
         days_ago = Time.now.ago(days_ago.days)
-        hits = options[:hits] || 1
+        hits = options[:hits].to_i || 1
 
         find(:all, :order => "id desc",
              :conditions => ["hits <= ? and created_at <= ?", hits, days_ago]
-        ).each do |u|
+        ).each_with_index do |u,i|
           recycle_url u
+          recycled = i
         end
       end
+      recycled
     end
 
     ##

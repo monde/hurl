@@ -130,9 +130,9 @@ FORM
   end
 
   def test_recycle_should_give_some_stats
-    post '/recycle'
+    post '/admin/recycle'
     assert_response :success
-    assert_match_body /keys recycled/
+    assert_match_body /\d+ keys recycled/
   end
 
   def test_urchin_included

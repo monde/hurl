@@ -15,7 +15,7 @@ require 'builder'
 require 'mime/types'
 require 'camping'
 require 'camping/db'
-require 'camping/session' unless ENV['CAMPING_ENV'] == 'production'
+require 'camping/session' unless ENV['RV_ENV'] == 'production'
 
 Camping.goes :Hurl
 
@@ -24,7 +24,7 @@ require 'hurl/controllers'
 require 'hurl/models'
 require 'hurl/views'
 
-ENV['CAMPING_ENV'] ||= 'testing'
+ENV['RV_ENV'] ||= 'testing'
 
 ##
 # Hurl is a camping application that makes small urls which are
@@ -35,7 +35,7 @@ module Hurl
   VERSION = '1.0.0'
 
   # the server environment Hurl is running in
-  HENV = ENV['CAMPING_ENV'] == 'production' ? :production : :test
+  HENV = ENV['RV_ENV'] == 'production' ? :production : :test
 
   # we are only including this so mosquito tests work
   include Camping::Session if HENV == :test
@@ -65,6 +65,6 @@ def Hurl.create
   end
 
   Hurl::Models.create_schema
-  Camping::Models::Session.create_schema unless ENV['CAMPING_ENV'] == 'production'
+  Camping::Models::Session.create_schema unless ENV['RV_ENV'] == 'production'
 
 end

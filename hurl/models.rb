@@ -50,8 +50,15 @@ module Hurl::Models
              :conditions => options[:conditions]
         ).each_with_index do |u,i|
           recycle_url u
-          recycled = i
+          recycled = i+1
         end
+      elsif options[:keys]
+        options[:keys].split(',').each_with_index do |key,i|
+          u = find(:first, :conditions => ["key = ?", key])
+	  next unless u
+          recycle_url u
+          recycled += 1
+	end
       else
         days_ago = options[:days_ago].to_i || 30
         days_ago = Time.now.ago(days_ago.days)
@@ -61,7 +68,7 @@ module Hurl::Models
              :conditions => ["hits <= ? and created_at <= ?", hits, days_ago]
         ).each_with_index do |u,i|
           recycle_url u
-          recycled = i
+          recycled = i+1
         end
       end
       recycled

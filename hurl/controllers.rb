@@ -125,15 +125,15 @@ end
   # the service.  This action should be protected with basic authentication,
   # etc.
 
-  class Admin < R '/admin/(\w+)'
+  class Admin < R '/recycle'
 
-    def post(*args)
+    def post()
       accept = env.ACCEPT.nil? ? env.HTTP_ACCEPT : env.ACCEPT
-      unless args[0] == 'recycle'
-        @status = '412'
-        return '412 - Precondition Failed'
-      end
 
+      @input[:id] = @input['id'] if @input['id']
+      @input[:days_ago] = @input['days_ago'] if @input['days_ago']
+      @input[:hits] = @input['hits'] if @input['hits']
+      @input[:conditions] = @input['conditions'] if @input['conditions']
       recycled = Url.recycle(@input)
       result = "#{recycled} keys recycled"
 

@@ -54,7 +54,7 @@ module Hurl::Models
         end
       elsif options[:keys]
         options[:keys].split(',').each_with_index do |key,i|
-        u = find(:first, :conditions => ["key = ?", key])
+        u = find(:first, :conditions => {:key => key})
         next unless u
           recycle_url u
           recycled += 1

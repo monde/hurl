@@ -38,7 +38,7 @@ module Hurl::Models
     # options[:conditions] to pass in custom :conditions.
     # Else options[:days_ago] or empty and defaults to 30 and 
     # options[:hits] or empty and defaults to 1
-    # to recyle dangling urls by
+    # to recycle dangling urls by
 
     def self.recycle(options = {})
       recycled = 0
@@ -54,11 +54,11 @@ module Hurl::Models
         end
       elsif options[:keys]
         options[:keys].split(',').each_with_index do |key,i|
-          u = find(:first, :conditions => ["key = ?", key])
-	  next unless u
+        u = find(:first, :conditions => ["key = ?", key])
+        next unless u
           recycle_url u
           recycled += 1
-	end
+        end
       else
         days_ago = options[:days_ago].to_i || 30
         days_ago = Time.now.ago(days_ago.days)

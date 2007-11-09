@@ -130,10 +130,6 @@ end
     def post()
       accept = env.ACCEPT.nil? ? env.HTTP_ACCEPT : env.ACCEPT
 
-      @input[:id] = @input['id'] if @input['id']
-      @input[:days_ago] = @input['days_ago'] if @input['days_ago']
-      @input[:hits] = @input['hits'] if @input['hits']
-      @input[:conditions] = @input['conditions'] if @input['conditions']
       recycled = Url.recycle(@input)
       result = "#{recycled} keys recycled"
 

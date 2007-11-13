@@ -10,7 +10,7 @@ when 'keys' then data = "--data \"keys=#{URI.escape(ARGV[1])}\""
 when /.+/ then data = "--data \"#{ARGV[1]}\""
 else data = ''
 end
-cmd = "curl -X POST -H 'Accept: text/plain' #{data} -u #{config['user']}:#{config['password']} #{config['app']}"
+cmd = "curl --insecure -X POST -H 'Accept: text/plain' #{data} -u #{config['user']}:#{config['password']} #{config['app']}"
 puts "running:\n#{cmd}"
 result = `#{cmd}`
 puts result

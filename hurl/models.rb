@@ -61,7 +61,7 @@ module Hurl::Models
         end
       else
         days_ago = options[:days_ago].to_i || 30
-        days_ago = Time.now.ago(days_ago.days)
+        days_ago = Time.now.ago(days_ago.days).to_s(:db)
         hits = options[:hits].to_i || 1
 
         find(:all, :order => "id desc",
@@ -72,7 +72,7 @@ module Hurl::Models
         end
 
         days_ago = options[:days_ago].to_i || 60
-        days_ago = Time.now.ago(days_ago.days)
+        days_ago = Time.now.ago(days_ago.days).to_s(:db)
         find(:all, :order => "id desc",
              :conditions => ["updated_at <= ?", days_ago]
         ).each_with_index do |u,i|

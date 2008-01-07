@@ -59,7 +59,7 @@ module Hurl::Models
           recycle_url u
           recycled += 1
         end
-      else
+      elsif options[:days_ago]
         days_ago = options[:days_ago].to_i rescue 30
         days_ago = Time.now.ago(days_ago.days).to_s(:db)
         hits = options[:hits].to_i || 1

@@ -59,8 +59,9 @@ module Hurl::Models
           recycle_url u
           recycled += 1
         end
-      elsif options[:days_ago]
+      else
         days_ago = options[:days_ago].to_i rescue 30
+        days_ago = 30 if days_ago < 1
         days_ago = Time.now.ago(days_ago.days).to_s(:db)
         hits = options[:hits].to_i || 1
 
@@ -72,6 +73,7 @@ module Hurl::Models
         end
 
         days_ago = options[:days_ago].to_i rescue 60
+        days_ago = 60 if days_ago < 1
         days_ago = Time.now.ago(days_ago.days).to_s(:db)
         find(:all, :order => "id desc",
              :conditions => ["updated_at <= ?", days_ago]

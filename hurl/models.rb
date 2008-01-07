@@ -74,7 +74,7 @@ module Hurl::Models
         days_ago = options[:days_ago].to_i || 60
         days_ago = Time.now.ago(days_ago.days)
         find(:all, :order => "id desc",
-             :conditions => ["updated_at <= ?", hits, days_ago]
+             :conditions => ["updated_at <= ?", days_ago]
         ).each_with_index do |u,i|
           recycle_url u
           recycled = i+1

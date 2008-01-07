@@ -61,7 +61,6 @@ def Hurl.create
     end
 
     Camping::Models::Base.logger = Logger.new("hurl.log") unless Hurl::HENV == :production
-    Camping::Models::Base.threaded_connections = false
   end
 
   Hurl::Models.create_schema

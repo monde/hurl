@@ -24,6 +24,13 @@ module Hurl::Controllers
   end
 
   ##
+  # derives the base uri for the application as seen from the network
+
+  def base_uri
+    URI.parse(base_url)
+  end
+
+  ##
   # Get the main page
   # Will return HTML if the requester accepts text/html,
   # will return application/xml otherwise only when application/xml
@@ -35,7 +42,8 @@ module Hurl::Controllers
     def get
       # special case for the javascript toolbar
       unless @input[:url].nil?
-        @hurl = url_to_hurl(@input[:url])
+        uri = URI.parse(@input[:url]) rescue base_uri
+        @hurl = url_to_hurl(uri)
         render :result
       else
         accept = env.ACCEPT.nil? ? env.HTTP_ACCEPT : env.ACCEPT
@@ -57,15 +65,16 @@ module Hurl::Controllers
     def post
       accept = env.ACCEPT.nil? ? env.HTTP_ACCEPT : env.ACCEPT
 
-      # bad input
-      if (@input[:url] || "").length <= 0
+      # bad or spam input
+      uri = URI.parse(@input[:url]) rescue nil
+      if uri.nil? || uri.host.nil? || is_spam?(uri)
         @headers['Content-Type'] = 'text/plain charset=utf8'
         @status = "400"
         return "400 - Invalid url parameter"
       end
 
       # good input
-      hurl = url_to_hurl(@input[:url])
+      hurl = url_to_hurl(uri)
 
       case accept
       when /text\/x?html/
@@ -74,7 +83,7 @@ module Hurl::Controllers
       when /(text|application)\/xml/
         @headers['Content-Type'] = 'application/xml charset=utf8'
         b = Builder::XmlMarkup.new
-        x = b.hurl {|url| url.input(@input[:url]); url.result(hurl) }
+        x = b.hurl {|url| url.input(uri); url.result(hurl) }
         @hurl = x.to_s
         render :xml, false
       else
@@ -86,15 +95,56 @@ module Hurl::Controllers
     private
 
     ##
-    # turn a url to a hurl like http://rubyforge.org/ -> http://hurl.it/foo
+    # turn a url to a hurl uri like http://rubyforge.org/ -> http://hurl.it/foo
 
-    def url_to_hurl(url)
+    def url_to_hurl(uri)
       # setup the default url no matter what
       conditions = Hurl::HENV == :production ? "\`key\` = 'it'" : "key = 'it'"
-      Url.create!(:key => 'it', :url => base_url) if Url.count(:conditions => conditions) == 0
+      Url.create!(:key => 'it', :url => base_uri.to_s) if Url.count(:conditions => conditions) == 0
 
-      ( url =~ /^#{Regexp.escape(base_url)}/ ) ? "#{base_url}it" : "#{base_url}#{Url.put(url)}"
+      hurl = base_uri
+      path = uri.host == hurl.host ? '/it' : "/#{Url.put(uri.to_s)}"
+      hurl.path = path
+      hurl
     end
+
+    ##
+    # use url and ip rbls to look for spammy uri
+
+    def is_spam?(uri)
+      if /\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/ =~ uri.host
+        rbls = [ 'opm.blitzed.us', 'bsb.empty.us' ]
+        spam = query_rbls(rbls, uri.host.split('.').reverse.join('.'))
+      else
+        host_parts = uri.host.split('.').reverse
+        domain = Array.new
+        ([ 'co', 'com', 'net', 'org', 'gov' ].include?(host_parts[1]) ? 3:2).times do
+          domain.unshift(host_parts.shift)
+        end
+        rbls = [ 'multi.surbl.org', 'bsb.empty.us' ]
+        spam = query_rbls(rbls, uri.host, domain.join('.'))
+      end
+      spam
+    end
+
+    ##
+    # query rbls, based on Typo code
+
+    def query_rbls(rbls, *subdomains)
+      rbls.each do |rbl|
+        subdomains.uniq.each do |d|
+          begin
+            response = IPSocket.getaddress([d, rbl].join('.'))
+            # rbls return 127.0.0 if the address is spammy
+            return true if response =~ /^127\.0\.0\./
+          rescue SocketError
+            # NXDOMAIN response => negative:  d is not in RBL
+          end
+        end
+      end
+      return false
+    end
+
   end
 
 # when not in the RV we'll serve static content ourselves

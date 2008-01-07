@@ -70,6 +70,15 @@ module Hurl::Models
           recycle_url u
           recycled = i+1
         end
+
+        days_ago = options[:days_ago].to_i || 60
+        days_ago = Time.now.ago(days_ago.days)
+        find(:all, :order => "id desc",
+             :conditions => ["updated_at <= ?", hits, days_ago]
+        ).each_with_index do |u,i|
+          recycle_url u
+          recycled = i+1
+        end
       end
       recycled
     end
@@ -139,6 +148,7 @@ module Hurl::Models
         add_column :hurl_urls, :url,         :string, :limit => 255, :null => false
         add_column :hurl_urls, :hits,        :integer, :default => 0
         add_column :hurl_urls, :created_at,  :datetime
+        add_column :hurl_urls, :updated_at,  :datetime
       else
         # sqlite3 friendly
         create_table :hurl_urls, :force => true do |t|
@@ -146,6 +156,7 @@ module Hurl::Models
           t.column :url,         :string, :limit => 255, :null => false
           t.column :hits,        :integer, :default => 0
           t.column :created_at,  :datetime
+          t.column :updated_at,  :datetime
         end
       end
       add_index :hurl_urls, :key, :unique => true

@@ -4,7 +4,7 @@
 # Please see the README.txt file for licensing information.
 #++
 
-require File.dirname(__FILE__) + '/test_helper'
+require File.join(File.dirname(__FILE__), 'test_helper')
 
 include Base62
 include Hurl::Models
@@ -114,8 +114,6 @@ end
 
 class TestAdd < Camping::UnitTest
   include TestHelper
-
-  fixtures :hurl_urls
 
   def test_url_create_should_be_valid
     hurl = create_url()

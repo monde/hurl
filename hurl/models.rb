@@ -10,27 +10,21 @@
 module Hurl::Models
 
   ##
-  # A Key class used to pre-fetch the unique keys used by Hurl::Url
-  # Hurl::Url relies on some external entity to generate new unique
-  # random keys
-
-  class Key < Base
-    extend Base62
-    validates_uniqueness_of :key, :on => :create
-  end
-
-  ##
   # A Url class represents data and operations needed to creating
   # and finding small URLs to be thrown from larger URLs.
 
   class Url < Base
+
     extend Base62
-    validates_uniqueness_of :key, :on => :create
+
+    def before_create
+      self.token = unique_token
+    end
 
     ##
     # The maximum width of our keys
 
-    MAX_KEY_WIDTH = 6 # 62 ** 6 == 58B
+    MAX_KEY_WIDTH = 5 # 62 ** 5 == 916M or almost 1B
 
     ##
     # Recycle the keys from urls base in options cirteria.  options[:id] to
@@ -90,30 +84,7 @@ module Hurl::Models
 
     def self.recycle_url(url)
       return if url.key == 'it'
-
-      d = url.destroy
-      new_id = Key.minimum(:id) - 1
-      key = Key.create(:key => url.key)
-
-      connection = ActiveRecord::Base.connection
-      pk = connection.quote_column_name(Key.primary_key)
-      new_id = connection.quote(new_id)
-      old_id = connection.quote(key.id)
-
-      sql = "UPDATE #{Key.table_name} SET #{pk} = #{new_id} WHERE #{pk} = #{old_id}"
-      connection.update sql, "#{Key.table_name} Update ID"
-    end
-
-    ##
-    # Takes a URL and returns a unique base62 key for the URL and
-    # saves the URL and its key to the database
-
-    def self.put(url)
-       key = Key.find(:first, :order => "id ASC")
-       Key.delete(key.id)
-       # keep it simple and blow up in front of the user on failures
-       create!(:key => key.key, :url => url)
-       key.key
+      url.destroy
     end
 
     ##
@@ -162,48 +133,13 @@ module Hurl::Models
         end
       end
       add_index :hurl_urls, :key, :unique => true
-
-      case Hurl::HENV
-      when :production
-        # coupled to MySQL MyISAM
-        create_table :hurl_keys, :options => 'engine=MyISAM', :force => true do |t|
-          # make varchar care about case sensitivity
-          t.columns << "\`key\` varchar(#{Url::MAX_KEY_WIDTH}) BINARY NOT NULL"
-        end
-      else
-        # sqlite3 friendly
-        create_table :hurl_keys, :force => true do |t|
-          t.column :key,         :string, :limit => Url::MAX_KEY_WIDTH, :null => false
-        end
-      end
-
-      add_index :hurl_keys, :key, :unique => true
-
-      preload_keys
     end
 
     def self.down
       remove_index :hurl_urls, :key
       drop_table :hurl_urls
-
-      remove_index :hurl_keys, :key
-      drop_table :hurl_keys
     end
 
-    def self.preload_keys
-      k = Key.new
-      # create and randomize 64, 3844 keys
-      pow = Hurl::HENV == :production ? 2 : 1
-      (0...pow).each do |pow|
-        lower = 62 ** pow
-        upper = 62 ** (pow+1)
-        a = (lower...upper).collect.sort_by { rand }
-        a.each do |i|
-          key = base62_encode(i)
-          Key.create!(:key => key) unless key == 'it' # 'it' is special key
-        end
-      end
-    end
   end
 
 end

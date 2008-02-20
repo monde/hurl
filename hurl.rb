@@ -56,8 +56,10 @@ def Hurl.create
         :username => 'root',
         :password => ''
     else
+      db_dir = File.join(File.dirname(__FILE__),'db')
+      Dir.mkdir(db_dir) unless File.exist?(db_dir)
       Camping::Models::Base.establish_connection :adapter => 'sqlite3',
-       :database => 'db/hurl.db'
+       :database => File.join(db_dir, 'hurl.db')
     end
 
     Camping::Models::Base.logger = Logger.new("hurl.log") unless Hurl::HENV == :production

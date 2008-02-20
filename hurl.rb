@@ -32,7 +32,7 @@ ENV['RV_ENV'] ||= 'testing'
 
 module Hurl
 
-  VERSION = '1.0.0'
+  VERSION = '2.0.0'
 
   # the server environment Hurl is running in
   HENV = ENV['RV_ENV'] == 'production' ? :production : :test

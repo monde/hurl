@@ -21,10 +21,15 @@ module Hurl::Models
       self.token = unique_token
     end
 
-    ##
-    # The maximum width of our keys
+    def before_destroy
+      raise ActiveRecord::RecordNotFound.new("'it' token cannot be destroyed!") if 
+        base62_encode(self.key) == 'it'
+    end
 
-    MAX_KEY_WIDTH = 5 # 62 ** 5 == 916M or almost 1B
+    ##
+    # The maximum power of the base 62 keys
+
+    MAX_POW = 5 # 62 ** 5 == 916M or almost 1B
 
     ##
     # Recycle the keys from urls base in options cirteria.  options[:id] to
@@ -80,19 +85,12 @@ module Hurl::Models
     end
 
     ##
-    # Does the mechanics of recycling a +Url+
+    # look up the URL for the base62 token
 
-    def self.recycle_url(url)
-      return if url.key == 'it'
-      url.destroy
-    end
-
-    ##
-    # look up the URL for the base62 key
-
-    def self.get(key)
+    def self.get(token)
       # do some basic error checking
-      return nil unless base62_validate(key)
+      return nil unless base62_validate(token)
+      key = base62_decode(token)
       # handle production mysql on the key column
       conditions = Hurl::HENV == :production ? "\`key\` = ?" : "key = ?"
       url = self.find(:first, :conditions => [conditions, key])
@@ -102,35 +100,33 @@ module Hurl::Models
       url.save # don't die if we can't increment
       url.url
     end
+
+    private
+
+    def unique_token
+      count = self.count
+      # determine the maximum key size based on the current number of Urls
+      pow = (1..MAX_POW).detect{|i| count < (62**i)/2}
+      key = 0
+      (1..10).detect do |i| 
+        key = rand(62**pow)
+        Url.find_by_key(key) ? nil : key
+      end
+    end
   end
 
   ##
   # Camping migration to create our database
 
   class CreateTheTable < V 0.1
-    extend Base62
-    def self.up
 
-      case Hurl::HENV
-      when :production
-        # coupled to MySQL MyISAM for performance
-        create_table :hurl_urls, :options => 'engine=MyISAM', :force => true do |t|
-          # make varchar care about case sensitivity
-          t.columns << "\`key\` varchar(#{Url::MAX_KEY_WIDTH}) BINARY NOT NULL"
-        end
-        add_column :hurl_urls, :url,         :string, :limit => 255, :null => false
-        add_column :hurl_urls, :hits,        :integer, :default => 0
-        add_column :hurl_urls, :created_at,  :datetime
-        add_column :hurl_urls, :updated_at,  :datetime
-      else
-        # sqlite3 friendly
-        create_table :hurl_urls, :force => true do |t|
-          t.column :key,         :string, :limit => Url::MAX_KEY_WIDTH, :null => false
-          t.column :url,         :string, :limit => 255, :null => false
-          t.column :hits,        :integer, :default => 0
-          t.column :created_at,  :datetime
-          t.column :updated_at,  :datetime
-        end
+    def self.up
+      create_table :hurl_urls, :force => true do |t|
+        t.column :key,         :integer, :null => false
+        t.column :url,         :string,  :null => false
+        t.column :hits,        :integer, :default => 0
+        t.column :created_at,  :datetime
+        t.column :updated_at,  :datetime
       end
       add_index :hurl_urls, :key, :unique => true
     end

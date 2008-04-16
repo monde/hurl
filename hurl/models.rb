@@ -1,5 +1,5 @@
 #--
-# Copyright (c) 2007 by Mike Mondragon (mikemondragon@gmail.com)
+# Copyright (c) 2007, 2008 by Mike Mondragon (mikemondragon@gmail.com)
 #
 # Please see the README.txt file for licensing information.
 #++
@@ -15,104 +15,74 @@ module Hurl::Models
 
   class Url < Base
 
-    extend Base62
-
-    def before_create
-      self.token = unique_token
-    end
-
-    def before_destroy
-      raise ActiveRecord::RecordNotFound.new("'it' token cannot be destroyed!") if 
-        base62_encode(self.key) == 'it'
-    end
-
     ##
     # The maximum power of the base 62 keys
 
     MAX_POW = 5 # 62 ** 5 == 916M or almost 1B
 
-    ##
-    # Recycle the keys from urls base in options cirteria.  options[:id] to
-    # options[:id] recycle a specific User.find(options[:id]).
-    # options[:conditions] to pass in custom :conditions.
-    # Else options[:days_ago] or empty and defaults to 30 and 
-    # options[:hits] or empty and defaults to 1
-    # to recycle dangling urls by
+    validate :valid_url?
+    validates_uniqueness_of :key
+    before_create :unique_key
 
-    def self.recycle(options = {})
-      recycled = 0
-      if options[:id].is_a? Fixnum
-        recycle_url find(options[:id])
-        recycled = 1
-      elsif options[:conditions]
-        find(:all, :order => "id desc",
-             :conditions => options[:conditions]
-        ).each_with_index do |u,i|
-          recycle_url u
-          recycled = i+1
-        end
-      elsif options[:keys]
-        options[:keys].split(',').each_with_index do |key,i|
-        u = find(:first, :conditions => {:key => key})
-        next unless u
-          recycle_url u
-          recycled += 1
-        end
-      else
-        days_ago = options[:days_ago].to_i rescue 30
-        days_ago = 30 if days_ago < 1
-        days_ago = Time.now.ago(days_ago.days).to_s(:db)
-        hits = options[:hits].to_i || 1
-
-        find(:all, :order => "id desc",
-             :conditions => ["hits <= ? and created_at <= ?", hits, days_ago]
-        ).each_with_index do |u,i|
-          recycle_url u
-          recycled = i+1
-        end
-
-        days_ago = options[:days_ago].to_i rescue 60
-        days_ago = 60 if days_ago < 1
-        days_ago = Time.now.ago(days_ago.days).to_s(:db)
-        find(:all, :order => "id desc",
-             :conditions => ["updated_at <= ?", days_ago]
-        ).each_with_index do |u,i|
-          recycle_url u
-          recycled = i+1
-        end
-      end
-      recycled
+    def before_destroy
+      # we don't want to destroy the special 'it' token , i.e. key 2783
+      raise ActiveRecord::RecordNotFound.new("'it' token cannot be destroyed!") if 
+        self.key.alphadecimal == 'it'
     end
 
     ##
-    # look up the URL for the base62 token
+    # token represenation of the key
 
-    def self.get(token)
-      # do some basic error checking
-      return nil unless base62_validate(token)
-      key = base62_decode(token)
-      # handle production mysql on the key column
-      conditions = Hurl::HENV == :production ? "\`key\` = ?" : "key = ?"
-      url = self.find(:first, :conditions => [conditions, key])
-      return nil if url.nil? 
+    def token
+      self.key.alphadecimal
+    end
 
-      url.increment(:hits)
-      url.save # don't die if we can't increment
-      url.url
+    class << self
+
+      ##
+      # Look up the URL for the base62 token.
+      # Each lookup will increment the counter.
+  
+      def find_by_token(token)
+        key = token.alphadecimal
+        url = self.find(:first, :cnditions => {:key => key})
+        raise ActiveRecord::RecordNotFound.new("url for '#{key}' not found") unless url
+        url.increment!(:hits)
+        url
+      end
     end
 
     private
 
-    def unique_token
-      count = self.count
+    ##
+    # choose a unique key for the Url
+
+    def unique_key(count = self.class.count(:id), pow = nil)
       # determine the maximum key size based on the current number of Urls
-      pow = (1..MAX_POW).detect{|i| count < (62**i)/2}
-      key = 0
-      (1..10).detect do |i| 
-        key = rand(62**pow)
-        Url.find_by_key(key) ? nil : key
+      # we choose power that is more than double the current size of the table
+      pow = (2..MAX_POW).detect{|i| count < (62**i)/2} unless pow
+
+      key = rand(62**pow)
+      unless Url.find_by_key(key)
+        self.key = key
+      else
+        # calling recursively until finding a unique key is an idea taken from
+        # robby russell's rubyurl
+        unique_key(count, pow)
       end
     end
+
+    ##
+    # let URI.parse be our validator
+
+    def valid_url?
+      begin
+        URI.parse(self.url)
+      rescue URI::InvalidURIError => err
+        errors.add_to_base(err)
+      end
+    end
+
   end
 
   ##
@@ -123,7 +93,7 @@ module Hurl::Models
     def self.up
       create_table :hurl_urls, :force => true do |t|
         t.column :key,         :integer, :null => false
-        t.column :url,         :string,  :null => false
+        t.column :url,         :text,    :null => false
         t.column :hits,        :integer, :default => 0
         t.column :created_at,  :datetime
         t.column :updated_at,  :datetime

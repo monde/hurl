@@ -16,10 +16,10 @@ require 'mime/types'
 require 'camping'
 require 'camping/db'
 require 'camping/session' unless ENV['RV_ENV'] == 'production'
+require 'alphadecimal'
 
 Camping.goes :Hurl
 
-require 'hurl/base62'
 require 'hurl/controllers'
 require 'hurl/models'
 require 'hurl/views'

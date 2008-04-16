@@ -99,8 +99,7 @@ module Hurl::Controllers
 
     def url_to_hurl(uri)
       # setup the default url no matter what
-      conditions = Hurl::HENV == :production ? "\`key\` = 'it'" : "key = 'it'"
-      Url.create!(:key => 'it', :url => base_uri.to_s) if Url.count(:conditions => conditions) == 0
+      Url.create!(:key => 'it', :url => base_uri.to_s) if Url.count(:id) == 0
 
       hurl = base_uri
       path = uri.host == hurl.host ? '/it' : "/#{Url.put(uri.to_s)}"

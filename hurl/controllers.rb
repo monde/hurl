@@ -98,9 +98,6 @@ module Hurl::Controllers
     # turn a url to a hurl uri like http://rubyforge.org/ -> http://hurl.it/foo
 
     def url_to_hurl(uri)
-      # setup the default url no matter what
-      Url.create!(:key => 'it', :url => base_uri.to_s) if Url.count(:id) == 0
-
       hurl = base_uri
       path = uri.host == hurl.host ? '/it' : "/#{Url.put(uri.to_s)}"
       hurl.path = path

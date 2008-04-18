@@ -6,7 +6,6 @@
 
 require File.dirname(__FILE__) + '/test_helper'
 
-include Base62
 include Hurl::Models
 include Hurl::Controllers
 

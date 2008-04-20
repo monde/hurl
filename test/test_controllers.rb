@@ -11,12 +11,11 @@ include Hurl::Controllers
 
 class TestHurl < Camping::FunctionalTest
 
-=begin
   def test_default_index_should_have_form
     get 
     assert_response :success
     form = <<FORM
-<form id="hurlform" method="post" action="/"><fieldset><label>big -&gt; </label><input type="text" class="empty" id="url" name="url" size="30"/><label> -&gt; </label><input type="submit" name="Submit" value="SUPER SMALL ME!"/></fieldset></form>
+<form id="hurlform" method="post" action="/api"><fieldset><label>big -&gt; </label><input type="text" class="empty" id="url" name="url" size="30"/><label> -&gt; </label><input type="submit" name="Submit" value="SUPER SMALL ME!"/></fieldset></form>
 FORM
     assert_match_body %r!#{form}!
   end
@@ -26,7 +25,7 @@ FORM
     get 
     assert_response :success
     response = <<FORM
-<hurl><message>POST url=SITE to create, GET /key to show</message></hurl>
+<hurl><message>POST to /api url=SITE for create, GET /key to show</message>\n</hurl>
 FORM
     assert_equal response, @response.body
   end
@@ -36,13 +35,14 @@ FORM
     get 
     assert_response :success
     form = <<FORM
-<form id="hurlform" method="post" action="/"><fieldset><label>big -&gt; </label><input type="text" class="empty" id="url" name="url" size="30"/><label> -&gt; </label><input type="submit" name="Submit" value="SUPER SMALL ME!"/></fieldset></form>
+<form id="hurlform" method="post" action="/api"><fieldset><label>big -&gt; </label><input type="text" class="empty" id="url" name="url" size="30"/><label> -&gt; </label><input type="submit" name="Submit" value="SUPER SMALL ME!"/></fieldset></form>
 FORM
      # Hurl should respon
      assert_equal "text/html", @response.headers["Content-Type"]
      assert_match_body %r!#{Regexp.escape(form)}!
   end
 
+=begin
   def test_post_should_have_results
     assert_difference(Url, :count, 1) do 
       post '', :url => 'http://sas.quat.ch/' 

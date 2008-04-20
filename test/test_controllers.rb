@@ -50,20 +50,21 @@ FORM
     assert_match_body %r!<h3>result</h3>!
     url = last_hurl
     assert_match_body %r!<a href="http://test.host/#{url.token}">http://test.host/#{url.token}</a>!
+    assert_equal 0, url.visits.size
   end
 
-=begin
   def test_xml_post_should_respond_with_xml
     @request.set("HTTP_ACCEPT", "application/xml")
     assert_difference(Url, :count, 1) do 
-      post '', :url => 'http://sas.quat.ch/' 
+      post '/api', :url => 'http://sas.quat.ch/' 
     end
     assert_response :success
-    m = /\/([0-9,A-Z,a-z]+)<\/result>/m.match(@response.body)
-    assert m
-    assert m[1]
+    url = last_hurl
+    assert_match_body %r!<hurl><input>http://sas.quat.ch/</input><url>http://test.host/#{url.token}</url>!
+    assert_equal 0, url.visits.size
   end
 
+=begin
   def test_bad_html_input_should_400
     assert_difference(Hurl::Models::Url, :count, 0) do 
       post '', :url => '' 

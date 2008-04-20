@@ -20,10 +20,11 @@ FORM
     assert_match_body %r!#{form}!
   end
 
-  def test_accept_xml_should_get_xml
+  def test_default_xml_index_accept_xml_should_get_xml
     @request.set("HTTP_ACCEPT", "application/xml")
     get 
     assert_response :success
+    assert_equal 'application/xml; charset=utf8', @response.headers['Content-Type']
     response = <<FORM
 <hurl><message>POST to /api url=SITE for create, GET /key to show</message></hurl>
 FORM
@@ -58,7 +59,9 @@ FORM
     assert_difference(Url, :count, 1) do 
       post '/api', :url => 'http://sas.quat.ch/' 
     end
+puts @response.headers.inspect
     assert_response :success
+    assert_equal 'application/xml; charset=utf8', @response.headers['Content-Type']
     url = last_hurl
     assert_match_body %r!<hurl><input>http://sas.quat.ch/</input><url>http://test.host/#{url.token}</url>!
     assert_equal 0, url.visits.size

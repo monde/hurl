@@ -31,6 +31,13 @@ module Hurl::Controllers
   end
 
   ##
+  # get the 
+
+  def accept
+    env.ACCEPT.nil? ? (env.HTTP_ACCEPT.nil? ? 'text/html' : env.HTTP_ACCEPT) : env.ACCEPT
+  end
+
+  ##
   # Get the main page
   # Will return HTML if the requester accepts text/html, will return 
   # application/xml otherwise when application/xml or text/xml is requested, 
@@ -38,7 +45,7 @@ module Hurl::Controllers
 
   class Index < R '/'
     def get
-      case env.HTTP_ACCEPT
+      case accept
       when /text\/x?html/
         render
       when /(text|application)\/xml/
@@ -50,88 +57,68 @@ module Hurl::Controllers
     end
   end
 
-=begin
+  ##
+  # API controller for creating Hurls
+
+  class Api < R '/api'
+
+    ##
+    # myOpenID authentication will come back to /api as GET so just bump back
+    # to root '/'
+
+    def get
+      redirect '/'
+    end
+
+    ##
     # add a url (create)
+
     def post
-      accept = env.ACCEPT.nil? ? env.HTTP_ACCEPT : env.ACCEPT
+
+# XXX PUT POST TIMER HERE
 
       # bad or spam input
-      uri = URI.parse(@input[:url]) rescue nil
-      if uri.nil? || uri.host.nil? || is_spam?(uri)
+      url = URI.parse(@input[:url]) rescue nil
+      if url.nil? || url.host.nil?
         @headers['Content-Type'] = 'text/plain charset=utf8'
         @status = "400"
         return "400 - Invalid url parameter"
       end
 
-      # good input
-      hurl = url_to_hurl(uri)
+      @input = url
+      @hurl = url_to_hurl(url)
 
       case accept
       when /text\/x?html/
-        @hurl = hurl
-        render :result
+        render :html, :result
       when /(text|application)\/xml/
-        @headers['Content-Type'] = 'application/xml charset=utf8'
-        b = Builder::XmlMarkup.new
-        x = b.hurl {|url| url.input(uri); url.result(hurl) }
-        @hurl = x.to_s
-        render :xml, false
+        @headers['Content-Type'] = 'application/xml; charset=utf8'
+        render :xml, :result
       else
-        @hurl = hurl
-        render :result
+        render :html, :result
       end
+
     end
 
     private
 
     ##
-    # turn a url to a hurl uri like http://rubyforge.org/ -> http://hurl.it/foo
+    # take a URL and return a hurl address, e.g. http://hurl.it/aB4
 
-    def url_to_hurl(uri)
+    def url_to_hurl(url)
       hurl = base_uri
-      path = uri.host == hurl.host ? '/it' : "/#{Url.put(uri.to_s)}"
+
+      if url.host == hurl.host
+        path = '/it'
+      else
+        u = Url.url_to_hurl(url.to_s, env.REMOTE_ADDR)
+        path = "/#{u.token}"
+      end
       hurl.path = path
       hurl
     end
 
-    ##
-    # use url and ip rbls to look for spammy uri
-
-    def is_spam?(uri)
-      if /\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/ =~ uri.host
-        rbls = [ 'opm.blitzed.us', 'bsb.empty.us' ]
-        spam = query_rbls(rbls, uri.host.split('.').reverse.join('.'))
-      else
-        host_parts = uri.host.split('.').reverse
-        domain = Array.new
-        ([ 'co', 'com', 'net', 'org', 'gov' ].include?(host_parts[1]) ? 3:2).times do
-          domain.unshift(host_parts.shift)
-        end
-        rbls = [ 'multi.surbl.org', 'bsb.empty.us' ]
-        spam = query_rbls(rbls, uri.host, domain.join('.'))
-      end
-      spam
-    end
-
-    ##
-    # query rbls, based on Typo code
-
-    def query_rbls(rbls, *subdomains)
-      rbls.each do |rbl|
-        subdomains.uniq.each do |d|
-          begin
-            response = IPSocket.getaddress([d, rbl].join('.'))
-            # rbls return 127.0.0 if the address is spammy
-            return true if response =~ /^127\.0\.0\./
-          rescue SocketError
-            # NXDOMAIN response => negative:  d is not in RBL
-          end
-        end
-      end
-      return false
-    end
-
-=end
+  end
 
 # when not in the RV we'll serve static content ourselves
 unless File.basename($0) =~ /rv.?_harness.rb/
@@ -156,43 +143,14 @@ unless File.basename($0) =~ /rv.?_harness.rb/
 
 end
 
-=begin
   ##
-  # Recycle junk URLs ... they are often just testers by people trying out
-  # the service.  This action should be protected with basic authentication,
-  # etc.
-
-  class Admin < R '/recycle'
-
-    def post()
-      accept = env.ACCEPT.nil? ? env.HTTP_ACCEPT : env.ACCEPT
-
-      recycled = Url.recycle(@input)
-      result = "#{recycled} keys recycled"
-
-      case accept
-      when /(text|application)\/xml/
-        @headers['Content-Type'] = 'application/xml charset=utf8'
-        b = Builder::XmlMarkup.new
-        x = b.hurl {|message| message.message(result); message.recycled(recycled) }
-        @hurl = x.to_s
-        render :xml, false
-      else
-        @headers['Content-Type'] = 'text/plain charset=utf8'
-        return result
-      end
-    end
-  end
-
-  ##
-  # Anything else is a lookup (show) in our world
+  # Anything else is a token to look up the original url
 
   class Translate < R '/(.+)'
-    def get(key)
 
-      accept = env.ACCEPT.nil? ? env.HTTP_ACCEPT : env.ACCEPT
+    def get(token)
 
-      hurl = Url.get(key)
+      hurl = Url.find_by_token(token, env)
       # bad input
       if hurl.nil?
         @headers['Content-Type'] = 'text/plain charset=utf8'
@@ -202,18 +160,16 @@ end
 
       case accept
       when /text\/x?html/
-        redirect hurl
+        redirect hurl.url
       when /(text|application)\/xml/
         @headers['Content-Type'] = 'application/xml charset=utf8'
-        b = Builder::XmlMarkup.new
-        x = b.hurl {|url| url.key("#{base_url}#{key}"); url.value(hurl) }
-        @hurl = x.to_s
-        render :xml
+        @token = token
+        @hurl = hurl.url
+        render :xml, :redirect
       else
         redirect hurl
       end
     end
   end
-=end
 
 end

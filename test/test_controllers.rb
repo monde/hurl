@@ -42,16 +42,17 @@ FORM
      assert_match_body %r!#{Regexp.escape(form)}!
   end
 
-=begin
   def test_post_should_have_results
     assert_difference(Url, :count, 1) do 
-      post '', :url => 'http://sas.quat.ch/' 
+      post '/api', :url => 'http://sas.quat.ch/' 
     end
     assert_response :success
     results = '<h3>results</h3>'
     assert_match_body %r!#{results}!
+    assert_select "h3 ul li a", 5
   end
 
+=begin
   def test_xml_post_should_respond_with_xml
     @request.set("HTTP_ACCEPT", "application/xml")
     assert_difference(Url, :count, 1) do 

@@ -11,7 +11,6 @@ begin
 rescue
   require 'erb'
 end
-require 'builder'
 require 'mime/types'
 require 'camping'
 require 'camping/db'
@@ -35,10 +34,10 @@ module Hurl
   VERSION = '2.0.0'
 
   # the server environment Hurl is running in
-  HENV = ENV['RV_ENV'] == 'production' ? :production : :test
+  HENV = ENV['RV_ENV'] == 'production' ? :production : :development
 
   # we are only including this so mosquito tests work
-  include Camping::Session if HENV == :test
+  include Camping::Session if HENV != :production
 
 end
 
@@ -59,7 +58,7 @@ def Hurl.create
       db_dir = File.join(File.dirname(__FILE__),'db')
       Dir.mkdir(db_dir) unless File.exist?(db_dir)
       Camping::Models::Base.establish_connection :adapter => 'sqlite3',
-       :database => File.join(db_dir, 'hurl.db')
+       :database => File.join(db_dir, "#{Hurl::HENV}.db")
     end
 
     Camping::Models::Base.logger = Logger.new("hurl.log") unless Hurl::HENV == :production

@@ -12,9 +12,11 @@ module Hurl
   # we are defining our own Hurl#render rather than Hurl::Views#layout
   # so that we can support Erb rendering
 
-  def render(kind = :html)
-    template = /([_,-,0-9,a-z,A-Z]+)/.match(env.PATH_INFO)[1] rescue "index"
-    @content = ERB.new(IO.read("#{PATH}/templates/#{template}.#{kind}.erb")).result(binding) rescue ''
+  def render(kind = :html, template = nil)
+    template = /([_,-,0-9,a-z,A-Z]+)/.match(env.PATH_INFO)[1] rescue 
+                 "index" if template.nil?
+    @content = ERB.new(IO.read("#{PATH}/templates/#{template}.#{kind}.erb")
+                      ).result(binding) rescue ''
 
     @title =  "hurl it"
     @base_url = base_url

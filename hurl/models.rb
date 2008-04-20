@@ -23,9 +23,17 @@ module Hurl::Models
 
     MAX_POW = 5
 
-    validate :valid_url?
     validates_uniqueness_of :key
     before_create :unique_key
+
+    def validate_on_save
+      begin
+        uri = URI.parse(url)
+        raise "http and https URLs only!" unless uri.scheme =~ /^http(s)?$/i
+      rescue StandardError => err
+        errors.add(:url, "invalid url: #{err}" )
+      end
+    end
 
     before_destroy do |url|
       raise ActiveRecord::ReadOnlyRecord.new("'it' token cannot be destroyed!") if 
@@ -66,7 +74,7 @@ module Hurl::Models
     # create a Url from +url+ and +remote_addr+
 
     def self.url_to_hurl(url, remote_addr)
-      self.create!(:url => url, :remote_addr => remote_addr)
+      self.create(:url => url, :remote_addr => remote_addr)
     end
 
     private
@@ -94,9 +102,9 @@ module Hurl::Models
     ##
     # let URI.parse be our validator
 
-    def valid_url?
+    def valid_url?(url)
       begin
-        uri = URI.parse(self.url)
+        uri = URI.parse(url)
         raise "http and https URLs only!" unless uri.scheme =~ /^http(s)?$/i
       rescue StandardError => err
         errors.add_to_base(err)

@@ -25,9 +25,9 @@ FORM
     get 
     assert_response :success
     response = <<FORM
-<hurl><message>POST to /api url=SITE for create, GET /key to show</message>\n</hurl>
+<hurl><message>POST to /api url=SITE for create, GET /key to show</message></hurl>
 FORM
-    assert_equal response, @response.body
+    assert_equal response.gsub(/\n/,''), @response.body.gsub(/\n/,'')
   end
 
   def test_should_respond_with_test_html_when_accept_not_known
@@ -37,7 +37,7 @@ FORM
     form = <<FORM
 <form id="hurlform" method="post" action="/api"><fieldset><label>big -&gt; </label><input type="text" class="empty" id="url" name="url" size="30"/><label> -&gt; </label><input type="submit" name="Submit" value="SUPER SMALL ME!"/></fieldset></form>
 FORM
-     # Hurl should respon
+     # Hurl should respond
      assert_equal "text/html", @response.headers["Content-Type"]
      assert_match_body %r!#{Regexp.escape(form)}!
   end
@@ -47,9 +47,9 @@ FORM
       post '/api', :url => 'http://sas.quat.ch/' 
     end
     assert_response :success
-    results = '<h3>results</h3>'
-    assert_match_body %r!#{results}!
-    assert_select "h3 ul li a", 5
+    assert_match_body %r!<h3>result</h3>!
+    url = last_hurl
+    assert_match_body %r!<a href="http://test.host/#{url.token}">http://test.host/#{url.token}</a>!
   end
 
 =begin

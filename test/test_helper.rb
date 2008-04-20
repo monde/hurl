@@ -12,3 +12,7 @@ require File.dirname(__FILE__) + "/../hurl"
 Hurl::HENV = :test
 
 Hurl.create
+
+def last_hurl
+  url = Hurl::Models::Url.find(Hurl::Models::Url.maximum(:id))
+end

@@ -30,6 +30,21 @@ module Hurl::Controllers
     URI.parse(base_url)
   end
 
+  class Index < R '/'
+    def get
+      case env.HTTP_ACCEPT
+      when /text\/x?html/
+        render
+      when /(text|application)\/xml/
+        @headers['Content-Type'] = 'application/xml; charset=utf8'
+        render :xml
+      else
+        render
+      end
+    end
+  end
+
+=begin
   ##
   # Get the main page
   # Will return HTML if the requester accepts text/html,
@@ -53,14 +68,19 @@ module Hurl::Controllers
           render :index
         when /(text|application)\/xml/
           @headers['Content-Type'] = 'application/xml charset=utf8'
-          @hurl = "<hurl><message>POST url=SITE to create, GET /key to show</message></hurl>"
+          xml = Builder::XmlMarkup.new
+          xml.hurl{|url| url.message "POST url=SITE to create, GET /key to show" }
+          @hurl = xml.to_s
           render :xml, false
         else
           render :index
         end
       end
     end
+  end
+=end
 
+=begin
     # add a url (create)
     def post
       accept = env.ACCEPT.nil? ? env.HTTP_ACCEPT : env.ACCEPT
@@ -142,6 +162,7 @@ module Hurl::Controllers
     end
 
   end
+=end
 
 # when not in the RV we'll serve static content ourselves
 unless File.basename($0) =~ /rv.?_harness.rb/
@@ -166,6 +187,7 @@ unless File.basename($0) =~ /rv.?_harness.rb/
 
 end
 
+=begin
   ##
   # Recycle junk URLs ... they are often just testers by people trying out
   # the service.  This action should be protected with basic authentication,
@@ -223,5 +245,6 @@ end
       end
     end
   end
+=end
 
 end

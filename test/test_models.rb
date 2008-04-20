@@ -16,6 +16,8 @@ class TestUrl < Camping::UnitTest
 
   def setup
     Hurl::Models::Url.delete_all
+    @env = stub(:REMOTE_ADDR => '127.0.0.10', :HTTP_REFERER => 'http://example.com/',
+                :HTTP_USER_AGENT => 'foo agent')
   end
 
   def test_validity
@@ -38,14 +40,23 @@ class TestUrl < Camping::UnitTest
     u = Hurl::Models::Url.create :url => 'http://example.com/'
     u = Hurl::Models::Url.find(:first, :conditions => {:key => u.key})
     count = u.hits
-    u = Hurl::Models::Url.find_by_token(u.token)
-    assert_equal (count + 1), u.hits
+    assert_difference(Hurl::Models::Visit, :count, 1) do 
+      u = Hurl::Models::Url.find_by_token(u.token, @env)
+      assert_equal (count + 1), u.hits
+    end
   end
 
   def test_2783_it_key_cannot_be_destroyed
     assert_raises(ActiveRecord::ReadOnlyRecord) do
       u = Hurl::Models::Url.create(:key => 'it'.alphadecimal, :url => 'http://example.com/')
       Hurl::Models::Url.destroy(u)
+    end
+  end
+
+  def test_add_visit
+    u = Hurl::Models::Url.create :url => 'http://example.com/'
+    assert_difference(Hurl::Models::Visit, :count, 1) do 
+      u.add_visit(@env)
     end
   end
 end

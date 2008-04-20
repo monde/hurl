@@ -15,6 +15,8 @@ module Hurl::Models
 
   class Url < Base
 
+    has_many :visits
+
     ##
     # The maximum power of the base 62 keys
     # 62 ** 5 == 916M or almost 1B
@@ -38,12 +40,24 @@ module Hurl::Models
     end
 
     ##
-    # Look up the URL for the base62 token and increment the counter.
+    # 
 
-    def self.find_by_token(token)
+    def add_visit(env)
+      options = {}
+      options[:remote_addr] = env.REMOTE_ADDR if env.REMOTE_ADDR
+      options[:referer] = env.HTTP_REFERER if env.HTTP_REFERER
+      options[:user_agent] = env.HTTP_USER_AGENT if env.HTTP_USER_AGENT
+      visits.create!(options)
+    end
+
+    ##
+    # Look up the URL for the base62 token, increment the counter and a visit.
+
+    def self.find_by_token(token, env)
       key = token.alphadecimal
       url = self.find(:first, :conditions => {:key => key})
       raise ActiveRecord::RecordNotFound.new("url for '#{key}' not found") unless url
+      url.add_visit(env)
       url.increment!(:hits)
       url
     end
@@ -86,6 +100,10 @@ module Hurl::Models
 
   end
 
+  class Visit < Base
+    belongs_to :url
+  end
+
   ##
   # Camping migration to create our database
 
@@ -105,7 +123,17 @@ module Hurl::Models
         t.column :created_at,  :datetime
         t.column :updated_at,  :datetime
       end
-      add_index :hurl_urls, :key, :unique => true
+      create_table :hurl_visits, :force => true do |t|
+        t.column :url_id,      :integer, :null => false
+        t.column :remote_addr, :string
+        t.column :referer,     :text
+        t.column :user_agent,  :string
+        t.column :created_at,  :datetime
+        t.column :updated_at,  :datetime
+      end
+      add_index :hurl_urls,   :key, :unique => true
+      add_index :hurl_urls,   :remote_addr
+      add_index :hurl_visits, :url_id
 
       # for XXX hax above
       # Url.create(:key => 'it'.alphadecimal, :url => 'http://hurl.it')

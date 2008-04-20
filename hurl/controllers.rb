@@ -30,6 +30,12 @@ module Hurl::Controllers
     URI.parse(base_url)
   end
 
+  ##
+  # Get the main page
+  # Will return HTML if the requester accepts text/html, will return 
+  # application/xml otherwise when application/xml or text/xml is requested, 
+  # returns text/html otherwise.
+
   class Index < R '/'
     def get
       case env.HTTP_ACCEPT
@@ -43,42 +49,6 @@ module Hurl::Controllers
       end
     end
   end
-
-=begin
-  ##
-  # Get the main page
-  # Will return HTML if the requester accepts text/html,
-  # will return application/xml otherwise only when application/xml
-  # or text/xml is requested, returns text/html otherwise
-  
-  class Index < R '/'
-
-    # get the default page (show)
-    def get
-      # special case for the javascript toolbar
-      unless @input[:url].nil?
-        uri = URI.parse(@input[:url]) rescue base_uri
-        @hurl = url_to_hurl(uri)
-        render :result
-      else
-        accept = env.ACCEPT.nil? ? env.HTTP_ACCEPT : env.ACCEPT
-        # honor html first otherwise its application/xml
-        case accept
-        when /text\/x?html/
-          render :index
-        when /(text|application)\/xml/
-          @headers['Content-Type'] = 'application/xml charset=utf8'
-          xml = Builder::XmlMarkup.new
-          xml.hurl{|url| url.message "POST url=SITE to create, GET /key to show" }
-          @hurl = xml.to_s
-          render :xml, false
-        else
-          render :index
-        end
-      end
-    end
-  end
-=end
 
 =begin
     # add a url (create)
@@ -161,7 +131,6 @@ module Hurl::Controllers
       return false
     end
 
-  end
 =end
 
 # when not in the RV we'll serve static content ourselves

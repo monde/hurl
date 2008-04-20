@@ -14,6 +14,7 @@ class TestHurl < Camping::FunctionalTest
   def test_default_index_should_have_form
     get 
     assert_response :success
+    assert_equal 'text/html', @response.headers['Content-Type']
     form = <<FORM
 <form id="hurlform" method="post" action="/api"><fieldset><label>big -&gt; </label><input type="text" class="empty" id="url" name="url" size="30"/><label> -&gt; </label><input type="submit" name="Submit" value="SUPER SMALL ME!"/></fieldset></form>
 FORM
@@ -35,11 +36,10 @@ FORM
     @request.set("HTTP_ACCEPT", "hello/world")
     get 
     assert_response :success
+    assert_equal 'text/html', @response.headers['Content-Type']
     form = <<FORM
 <form id="hurlform" method="post" action="/api"><fieldset><label>big -&gt; </label><input type="text" class="empty" id="url" name="url" size="30"/><label> -&gt; </label><input type="submit" name="Submit" value="SUPER SMALL ME!"/></fieldset></form>
 FORM
-     # Hurl should respond
-     assert_equal "text/html", @response.headers["Content-Type"]
      assert_match_body %r!#{Regexp.escape(form)}!
   end
 
@@ -48,6 +48,7 @@ FORM
       post '/api', :url => 'http://sas.quat.ch/' 
     end
     assert_response :success
+    assert_equal 'text/html', @response.headers['Content-Type']
     assert_match_body %r!<h3>result</h3>!
     url = last_hurl
     assert_match_body %r!<a href="http://test.host/#{url.token}">http://test.host/#{url.token}</a>!
@@ -59,7 +60,6 @@ FORM
     assert_difference(Url, :count, 1) do 
       post '/api', :url => 'http://sas.quat.ch/' 
     end
-puts @response.headers.inspect
     assert_response :success
     assert_equal 'application/xml; charset=utf8', @response.headers['Content-Type']
     url = last_hurl

@@ -12,19 +12,16 @@ module Hurl
   # we are defining our own Hurl#render rather than Hurl::Views#layout
   # so that we can support Erb rendering
 
-  def render(m, layout=true)
-    content = ERB.new(IO.read("#{PATH}/templates/#{m}.rhtml")).result(binding) rescue ''
+  def render(kind = :html)
+    template = /([_,-,0-9,a-z,A-Z]+)/.match(env.PATH_INFO)[1] rescue "index"
+    @content = ERB.new(IO.read("#{PATH}/templates/#{template}.#{kind}.erb")).result(binding) rescue ''
 
-    # assumes html layout
-    if layout
-      @title =  "hurl it"
-      @base_url = base_url
+    @title =  "hurl it"
+    @base_url = base_url
 
-      # if one has google analytics javascript put it in the urchin.txt file
-      @urchin = IO.read("#{PATH}/templates/urchin.txt") rescue nil
-      content = ERB.new(IO.read("#{PATH}/templates/layout.rhtml")).result(binding) if layout
-    end
-    return content
+    # if one has google analytics javascript put it in the urchin.txt file
+    @urchin = IO.read("#{PATH}/templates/urchin.txt") rescue ''
+    ERB.new(IO.read("#{PATH}/templates/layout.#{kind}.erb")).result(binding)
   end
 end
 

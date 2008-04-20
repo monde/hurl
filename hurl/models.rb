@@ -17,8 +17,9 @@ module Hurl::Models
 
     ##
     # The maximum power of the base 62 keys
+    # 62 ** 5 == 916M or almost 1B
 
-    MAX_POW = 5 # 62 ** 5 == 916M or almost 1B
+    MAX_POW = 5
 
     validate :valid_url?
     validates_uniqueness_of :key
@@ -90,20 +91,24 @@ module Hurl::Models
 
   class CreateTheTable < V 0.1
 
-    #XXX normally you could create the special 'it' default in the migration
-    #but the base URL dependant on the deployment so do it in the web's env
-    #class Url < ActiveRecord::Base; end
+    # XXX normally you could create the special 'it' default in the migration
+    # but the base URL is dependant on the deployment so do it in the web's env
+    # class Url < ActiveRecord::Base; end
+
     def self.up
       create_table :hurl_urls, :force => true do |t|
         t.column :key,         :integer, :null => false
         t.column :url,         :text,    :null => false
         t.column :hits,        :integer, :default => 0
+        t.column :remote_addr, :string
+        t.column :spam,        :boolean
         t.column :created_at,  :datetime
         t.column :updated_at,  :datetime
       end
       add_index :hurl_urls, :key, :unique => true
-      #for XXX hax above
-      #Url.create(:key => 'it'.alphadecimal, :url => 'http://hurl.it')
+
+      # for XXX hax above
+      # Url.create(:key => 'it'.alphadecimal, :url => 'http://hurl.it')
     end
 
     def self.down

@@ -16,6 +16,7 @@ class TestUrl < Camping::UnitTest
 
   def setup
     Hurl::Models::Url.delete_all
+    Hurl::Models::Visit.delete_all
     @env = stub(:REMOTE_ADDR => '127.0.0.10', :HTTP_REFERER => 'http://example.com/',
                 :HTTP_USER_AGENT => 'foo agent')
   end
@@ -57,6 +58,14 @@ class TestUrl < Camping::UnitTest
     u = Hurl::Models::Url.create :url => 'http://example.com/'
     assert_difference(Hurl::Models::Visit, :count, 1) do 
       u.add_visit(@env)
+    end
+  end
+
+  def test_url_to_hurl
+    assert_difference(Hurl::Models::Url, :count, 1) do 
+      u = Hurl::Models::Url.url_to_hurl('http://example.com/', '127.0.0.10')
+      assert_equal u.url, 'http://example.com/'
+      assert_equal u.remote_addr, '127.0.0.10'
     end
   end
 end

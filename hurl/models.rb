@@ -62,6 +62,13 @@ module Hurl::Models
       url
     end
 
+    ##
+    # create a Url from +url+ and +remote_addr+
+
+    def self.url_to_hurl(url, remote_addr)
+      self.create!(:url => url, :remote_addr => remote_addr)
+    end
+
     private
 
     ##

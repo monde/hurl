@@ -6,6 +6,9 @@
 
 require 'rubygems'
 require 'mosquito'
+require 'mocha'
 require File.dirname(__FILE__) + "/../hurl"
+
+Hurl::HENV = :test
 
 Hurl.create

@@ -20,7 +20,8 @@ module Hurl
     @base_url = base_url
 
     # if one has google analytics javascript put it in the urchin.txt file
-    @urchin = IO.read("#{PATH}/templates/urchin.txt") rescue ''
+    @urchin = IO.read("#{PATH}/templates/urchin.txt") rescue '' if kind == :html
+
     ERB.new(IO.read("#{PATH}/templates/layout.#{kind}.erb")).result(binding)
   end
 end

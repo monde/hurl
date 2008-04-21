@@ -62,9 +62,10 @@ module Hurl::Models
     # Look up the URL for the base62 token, increment the counter and a visit.
 
     def self.find_by_token(token, env)
+      raise ActiveRecord::RecordNotFound.new("malformed token '#{token}'") unless token =~ /^[0-9,a-z,A-Z]+$/
       key = token.alphadecimal
       url = self.find(:first, :conditions => {:key => key})
-      raise ActiveRecord::RecordNotFound.new("url for '#{key}' not found") unless url
+      raise ActiveRecord::RecordNotFound.new("url for '#{token}' not found") unless url
       url.add_visit(env)
       url.increment!(:hits)
       url

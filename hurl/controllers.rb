@@ -150,12 +150,13 @@ end
 
     def get(token)
 
-      hurl = Url.find_by_token(token, env)
-      # bad input
-      if hurl.nil?
+      begin
+        hurl = Url.find_by_token(token, env)
+      rescue ActiveRecord::RecordNotFound => err
+        # bad input
         @headers['Content-Type'] = 'text/plain; charset=utf8'
         @status = "400"
-        return "400 - Invalid hurl request key"
+        return "400 - Invalid request: #{err}"
       end
 
       case accept

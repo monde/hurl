@@ -4,6 +4,7 @@
 # Please see the README.txt file for licensing information.
 #++
 
+require 'pp'
 require 'rubygems'
 require 'mosquito'
 require 'mocha'

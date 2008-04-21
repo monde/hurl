@@ -122,7 +122,7 @@ FORM
 FORM
     assert_equal response.gsub(/\n/,''), @response.body.gsub(/\n/,'')
   end
-=begin
+
   def test_bad_request_should_400
     # bad gets are rendered not redirected
     get "/j@nkeD"
@@ -142,6 +142,7 @@ FORM
     assert_response "400"
   end
 
+=begin
   def test_recycle_should_give_some_stats
     post '/recycle'
     assert_response :success

@@ -67,22 +67,22 @@ FORM
     assert_equal 0, url.visits.size
   end
 
-=begin
-  def test_bad_html_input_should_400
+  def test_bad_api_input_for_html_should_400
     assert_difference(Hurl::Models::Url, :count, 0) do 
-      post '', :url => '' 
+      post '/api', :url => '' 
     end
     assert_response "400"
   end
 
-  def test_bad_xml_input_should_400
+  def test_bad_api_input_for_xml_should_400
     @request.set("HTTP_ACCEPT", "application/xml")
     assert_difference(Url, :count, 0) do 
-      post '', :url => '' 
+      post '/api', :url => '' 
     end
     assert_response "400"
   end
 
+=begin
   def test_hurled_url_should_be_the_same_unhurled
     # set up a real post
     to_hurl = "http://sas.quat.ch/"

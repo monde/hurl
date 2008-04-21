@@ -80,7 +80,7 @@ module Hurl::Controllers
       # bad or spam input
       url = URI.parse(@input[:url]) rescue nil
       if url.nil? || url.host.nil?
-        @headers['Content-Type'] = 'text/plain charset=utf8'
+        @headers['Content-Type'] = 'text/plain; charset=utf8'
         @status = "400"
         return "400 - Invalid url parameter"
       end
@@ -153,7 +153,7 @@ end
       hurl = Url.find_by_token(token, env)
       # bad input
       if hurl.nil?
-        @headers['Content-Type'] = 'text/plain charset=utf8'
+        @headers['Content-Type'] = 'text/plain; charset=utf8'
         @status = "400"
         return "400 - Invalid hurl request key"
       end
@@ -162,7 +162,7 @@ end
       when /text\/x?html/
         redirect hurl.url
       when /(text|application)\/xml/
-        @headers['Content-Type'] = 'application/xml charset=utf8'
+        @headers['Content-Type'] = 'application/xml; charset=utf8'
         @token = token
         @hurl = hurl.url
         render :xml, :redirect

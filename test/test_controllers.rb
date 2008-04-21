@@ -63,7 +63,10 @@ FORM
     assert_response :success
     assert_equal 'application/xml; charset=utf8', @response.headers['Content-Type']
     url = last_hurl
-    assert_match_body %r!<hurl><input>http://sas.quat.ch/</input><url>http://test.host/#{url.token}</url>!
+    response = <<FORM
+<hurl><input>http://sas.quat.ch/</input><url>http://test.host/#{url.token}</url></hurl>
+FORM
+    assert_equal response.gsub(/\n/,''), @response.body.gsub(/\n/,'')
     assert_equal 0, url.visits.size
   end
 
@@ -72,6 +75,7 @@ FORM
       post '/api', :url => '' 
     end
     assert_response "400"
+    assert_equal 'text/plain; charset=utf8', @response.headers['Content-Type']
   end
 
   def test_bad_api_input_for_xml_should_400
@@ -80,6 +84,7 @@ FORM
       post '/api', :url => '' 
     end
     assert_response "400"
+    assert_equal 'text/plain; charset=utf8', @response.headers['Content-Type']
   end
 
   def test_hurled_url_should_be_the_same_unhurled
@@ -96,24 +101,28 @@ FORM
     assert_equal @response.headers['Location'].to_s, url.url
   end
 
-=begin
-  def test_xml_request_should_get_xml
+  def test_hurled_url_xml_request_should_get_xml
     @request.set("HTTP_ACCEPT", "application/xml")
     to_hurl = "http://sas.quat.ch/"
-    post '', :url => to_hurl
+    post '/api', :url => to_hurl
     assert_response :success
-    m = /\/([0-9,A-Z,a-z]+)<\/result>/m.match(@response.body)
+    url = last_hurl
+    response = <<FORM
+<hurl><input>http://sas.quat.ch/</input><url>http://test.host/#{url.token}</url></hurl>
+FORM
+    assert_equal response.gsub(/\n/,''), @response.body.gsub(/\n/,'')
 
     #now get it back
-    assert m
-    hurled = m[1]
     @request.set("HTTP_ACCEPT", "application/xml")
-    get "/#{hurled}"
+    get "/#{url.token}"
+    assert_equal 'application/xml; charset=utf8', @response.headers['Content-Type']
     assert_response :success
-    m = /<value>http:\/\/sas.quat.ch\/<\/value>/m.match(@response.body)
-    assert m
+    response = <<FORM
+<hurl><token>#{url.token}</token><url>http://sas.quat.ch/</url></hurl>
+FORM
+    assert_equal response.gsub(/\n/,''), @response.body.gsub(/\n/,'')
   end
-
+=begin
   def test_bad_request_should_400
     # bad gets are rendered not redirected
     get "/j@nkeD"

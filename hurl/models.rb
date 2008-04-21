@@ -26,9 +26,9 @@ module Hurl::Models
     validates_uniqueness_of :key
     before_create :unique_key
 
-    def validate_on_save
+    def validate_on_create
       begin
-        uri = URI.parse(url)
+        uri = URI.parse(self.url)
         raise "http and https URLs only!" unless uri.scheme =~ /^http(s)?$/i
       rescue StandardError => err
         errors.add(:url, "invalid url: #{err}" )

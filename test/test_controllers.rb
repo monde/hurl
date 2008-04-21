@@ -82,22 +82,21 @@ FORM
     assert_response "400"
   end
 
-=begin
   def test_hurled_url_should_be_the_same_unhurled
     # set up a real post
     to_hurl = "http://sas.quat.ch/"
-    post '', :url => to_hurl
+    post '/api', :url => to_hurl
     assert_response :success
-    m = /\/([0-9,A-Z,a-z]+)<\/h4>/m.match(@response.body)
+    url = last_hurl
+    assert_match_body %r!<a href="http://test.host/#{url.token}">http://test.host/#{url.token}</a>!
 
     # now get it back
-    assert m
-    hurled = m[1]
-    get "/#{hurled}"
+    get "/#{url.token}"
     assert_response :redirect
-    assert_equal @response.headers['Location'].to_s, to_hurl
+    assert_equal @response.headers['Location'].to_s, url.url
   end
 
+=begin
   def test_xml_request_should_get_xml
     @request.set("HTTP_ACCEPT", "application/xml")
     to_hurl = "http://sas.quat.ch/"

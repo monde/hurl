@@ -142,18 +142,4 @@ FORM
     assert_response "400"
   end
 
-=begin
-  def test_recycle_should_give_some_stats
-    post '/recycle'
-    assert_response :success
-    assert_match_body /\d+ keys recycled/
-  end
-
-  def test_urchin_included
-    get "/"
-    assert_response :success
-    assert_match_body /put Google Analytics urchin code in templates\/urchin.txt/
-  end
-=end
-
 end

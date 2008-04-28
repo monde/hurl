@@ -34,7 +34,7 @@ module Hurl::Controllers
   # get the 
 
   def accept
-    env.ACCEPT.nil? ? (env.HTTP_ACCEPT.nil? ? 'text/html' : env.HTTP_ACCEPT) : env.ACCEPT
+    env.HTTP_ACCEPT.nil? ? (env.ACCEPT.nil? ? 'text/html' : env.ACCEPT) : env.HTTP_ACCEPT
   end
 
   ##
@@ -45,10 +45,7 @@ module Hurl::Controllers
 
   class Index < R '/'
     def get
-      case accept
-      when /text\/x?html/
-        render
-      when /(text|application)\/xml/
+      if (accept =~ /(text|application)\/xml/) && (accept =~ /text\/x?html/).nil?
         @headers['Content-Type'] = 'application/xml; charset=utf8'
         render :xml
       else
@@ -88,10 +85,7 @@ module Hurl::Controllers
       @input = url
       @hurl = url_to_hurl(url)
 
-      case accept
-      when /text\/x?html/
-        render :html, :result
-      when /(text|application)\/xml/
+      if (accept =~ /(text|application)\/xml/) && (accept =~ /text\/x?html/).nil?
         @headers['Content-Type'] = 'application/xml; charset=utf8'
         render :xml, :result
       else
@@ -159,16 +153,17 @@ end
         return "400 - Invalid request: #{err}"
       end
 
-      case accept
-      when /text\/x?html/
-        redirect hurl.url
-      when /(text|application)\/xml/
+      if (accept =~ /(text|application)\/xml/) && (accept =~ /text\/x?html/).nil?
         @headers['Content-Type'] = 'application/xml; charset=utf8'
         @token = token
         @hurl = hurl.url
-        render :xml, :redirect
+        render :xml, (hurl.spam? ? :spam : :redirect)
       else
-        redirect hurl
+        if hurl.spam?
+          render :html, :spam
+        else
+          redirect hurl.url
+        end
       end
     end
   end

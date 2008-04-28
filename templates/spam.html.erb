@@ -1,0 +1,13 @@
+<div id="spam">
+  <h3>spam</h3>
+  <p>The HURL redirection that you have selected has been marked as spam.
+     Be careful if you click on this link.</p>
+  <h4>!!! SPAM --&gt; <%= a "#{@hurl}", :href => "#{@hurl}" %> &lt;-- SPAM !!!</h4>
+</div>
+
+<div id="results">
+  <h3>hurl it service</h3>
+  <p>HURL is redirection service that lets you store very long URLs in a short 
+     format that are easy to remember and share.  Click here to use the 
+     HURL service for yourself: <a href="<%= @base_url %>"><%= @base_url %></a></p>
+</div>

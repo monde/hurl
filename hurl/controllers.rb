@@ -153,10 +153,10 @@ end
         return "400 - Invalid request: #{err}"
       end
 
+      @token = token
+      @hurl = hurl.url
       if (accept =~ /(text|application)\/xml/) && (accept =~ /text\/x?html/).nil?
         @headers['Content-Type'] = 'application/xml; charset=utf8'
-        @token = token
-        @hurl = hurl.url
         render :xml, (hurl.spam? ? :spam : :redirect)
       else
         if hurl.spam?

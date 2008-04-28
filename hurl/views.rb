@@ -15,11 +15,12 @@ module Hurl
   def render(kind = :html, template = nil)
     template = /([_,-,0-9,a-z,A-Z]+)/.match(env.PATH_INFO)[1] rescue 
                  "index" if template.nil?
-    @content = ERB.new(IO.read("#{PATH}/templates/#{template}.#{kind}.erb")
-                      ).result(binding) rescue ''
 
     @title =  "hurl it"
     @base_url = base_url
+
+    @content = ERB.new(IO.read("#{PATH}/templates/#{template}.#{kind}.erb")
+                      ).result(binding)
 
     # if one has google analytics javascript put it in the urchin.txt file
     @urchin = IO.read("#{PATH}/templates/urchin.txt") rescue '' if kind == :html

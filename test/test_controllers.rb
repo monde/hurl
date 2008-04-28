@@ -142,4 +142,45 @@ FORM
     assert_response "400"
   end
 
+  def test_spam_hurled_url_should_render_spam_template
+    # set up a real post
+    to_hurl = "http://sas.quat.ch/"
+    post '/api', :url => to_hurl
+    assert_response :success
+    url = last_hurl
+    url.spam = true
+    url.save!
+
+    # now get it back
+    get "/#{url.token}"
+    assert_response :success
+    assert_match_body /<h3>spam<\/h3>/i
+    #<h4>!!! SPAM --&gt; <a href=\"http://sas.quat.ch/\">http://sas.quat.ch/</a> &lt;-- SPAM !!!</h4>
+    assert_match_body %r!<h4>\!\!\! SPAM --&gt; <a href="#{url.url}">#{url.url}<\/a> &lt;-- SPAM \!\!\!<\/h4>!
+  end
+
+  def test_spam_hurled_url_xml_request_should_get_xml
+    @request.set("HTTP_ACCEPT", "application/xml")
+    to_hurl = "http://sas.quat.ch/"
+    post '/api', :url => to_hurl
+    assert_response :success
+    url = last_hurl
+    url.spam = true
+    url.save!
+    response = <<FORM
+<hurl><input>http://sas.quat.ch/</input><url>http://test.host/#{url.token}</url></hurl>
+FORM
+    assert_equal response.gsub(/\n/,''), @response.body.gsub(/\n/,'')
+
+    #now get it back
+    @request.set("HTTP_ACCEPT", "application/xml")
+    get "/#{url.token}"
+    assert_equal 'application/xml; charset=utf8', @response.headers['Content-Type']
+    assert_response :success
+    response = <<FORM
+<hurl><token>#{url.token}</token><spam>http://sas.quat.ch/</spam></hurl>
+FORM
+    assert_equal response.gsub(/\n/,''), @response.body.gsub(/\n/,'')
+  end
+
 end

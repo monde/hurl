@@ -14,7 +14,7 @@ end
 require 'mime/types'
 require 'camping'
 require 'camping/db'
-require 'camping/session' unless ENV['RV_ENV'] == 'production'
+require 'camping/session'
 require 'alphadecimal'
 
 Camping.goes :Hurl
@@ -37,7 +37,7 @@ module Hurl
   HENV = ENV['RV_ENV'] == 'production' ? :production : :development
 
   # we are only including this so mosquito tests work
-  include Camping::Session if HENV != :production
+  include Camping::Session
 
 end
 
@@ -65,6 +65,6 @@ def Hurl.create
   end
 
   Hurl::Models.create_schema
-  Camping::Models::Session.create_schema unless ENV['RV_ENV'] == 'production'
+  Camping::Models::Session.create_schema
 
 end

@@ -37,6 +37,12 @@ module Hurl::Controllers
     env.HTTP_ACCEPT.nil? ? (env.ACCEPT.nil? ? 'text/html' : env.ACCEPT) : env.HTTP_ACCEPT
   end
 
+  def exit_with_error(status, message)
+    @headers['Content-Type'] = 'text/plain; charset=utf8'
+    @status = status
+    "#{status} - #{message}"
+  end
+
   ##
   # Get the main page
   # Will return HTML if the requester accepts text/html, will return 
@@ -59,6 +65,8 @@ module Hurl::Controllers
 
   class Api < R '/api'
 
+    include Parkpass
+
     ##
     # myOpenID authentication will come back to /api as GET so just bump back
     # to root '/'
@@ -74,13 +82,12 @@ module Hurl::Controllers
 
 # XXX PUT POST TIMER HERE
 
+      return exit_with_error("401", "OpenID Authenticaiton Required") unless authenticate_with_open_id
+
       # bad or spam input
       url = URI.parse(@input[:url]) rescue nil
-      if url.nil? || url.host.nil?
-        @headers['Content-Type'] = 'text/plain; charset=utf8'
-        @status = "400"
-        return "400 - Invalid url parameter"
-      end
+
+      return exit_with_error("400", "Invalid url parameter") if url.nil? || url.host.nil?
 
       @input = url
       @hurl = url_to_hurl(url)
@@ -112,6 +119,7 @@ module Hurl::Controllers
       hurl
     end
 
+
   end
 
 # when not in the RV we'll serve static content ourselves
@@ -124,14 +132,11 @@ unless File.basename($0) =~ /rv.?_harness.rb/
     PATH = File.expand_path("#{File.dirname(__FILE__)}/../")
 
     def get file
-      if file.include? '..'
-        @status = '403'
-        return '403 - Invalid path'
-      else
-        type = (MIME::Types.type_for(file)[0] || '/text/plain').to_s
-        @headers['Content-Type'] = type
-        @headers['X-Sendfile'] = File.join PATH, 'static', file
-      end
+      return exit_with_error("403", "Invalid path") if file.include? '..'
+
+      type = (MIME::Types.type_for(file)[0] || '/text/plain').to_s
+      @headers['Content-Type'] = type
+      @headers['X-Sendfile'] = File.join PATH, 'static', file
     end
   end
 
@@ -148,9 +153,7 @@ end
         hurl = Url.find_by_token(token, env)
       rescue ActiveRecord::RecordNotFound => err
         # bad input
-        @headers['Content-Type'] = 'text/plain; charset=utf8'
-        @status = "400"
-        return "400 - Invalid request: #{err}"
+        return exit_with_error("400", "Invalid request: #{err}")
       end
 
       @token = token

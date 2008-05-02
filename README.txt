@@ -12,54 +12,41 @@ metaprogramming.
 
 == FEATURES/PROBLEMS:
   
-Enter URL, get back even smaller URL.
+Enter URL, get back an even smaller URL.
 
 == REQUIREMENTS:
 
 * camping
 * mime-types
 * erubis
-* builder
 * sqlite3-ruby
 * mysql
+* alphadecimal http://github.com/JackDanger/Alphadecimal
+* deployment in RV
+  http://blog.evanweaver.com/articles/2006/12/19/rv-a-tool-for-luxurious-camping/
 
 == INSTALL:
 
-* gem install hurl
-
-The Hurl will a prepopulate 3906 keys (62^1 + 62^2) when it itializes
-its database with a migration in production mode.
+* git clone git@github.com:monde/hurl.git
+* modify template erb's in templates directory to suit your desires
+* modify urchin.txt in templates directory for Google Analytics support
 
 == Administrative
 
-Use the make_keys.rb script to make additional prepopulated keys.  For 
-instance make 238328 unique keys:
-ruby admin/make_keys.rb 3 > /tmp/hurl_keys-3.sql
-
-Make another 14776336 unique keys:
-ruby admin/make_keys.rb 4 > /tmp/hurl_keys-4.sql
-
-Then load those keys your db, the example db is named hurl:
-mysql -u root -p hurl < /tmp/hurl_keys-3.sql
-mysql -u root -p hurl < /tmp/hurl_keys-4.sql
-note: 62^4 keys takes up about 750MB disk space with the MyISAM engine.
-
-Also in the admin directory is an example RV harness, see "rv, a tool for 
-luxurious camping" by Evan Weaver for more information:
+The admin directory contains an example RV harness yaml configuration file, 
+see "rv, a tool for luxurious camping" by Evan Weaver for more information:
 http://blog.evanweaver.com/articles/2006/12/19/rv-a-tool-for-luxurious-camping
 
-There is also an alternative harness called RV2 in the admin direcotry
-that is SysV init.d shell based.  For its use see:
-
-http://blog.mondragon.cc/articles/2007/07/04/small-urls-with-camping
-http://blog.mondragon.cc/articles/2007/07/05/rv2-camping-on-gentoo
-
 When running in testing mode Hurl will use a local SQLite3 database.  When
-running in produciton mode Hurl will use a MySQL database.  See the 
+running in productiton mode Hurl will use a MySQL database.  See the 
 db migration to examine how the db is tuned based on the running mode.
 
 See http://camping.rubyforge.org/files/README.html for more information about
 Camping applications.
+
+Original blog post announcing (deprecated HURL)
+http://blog.mondragon.cc/articles/2007/07/04/small-urls-with-camping
+http://blog.mondragon.cc/articles/2007/07/05/rv2-camping-on-gentoo
 
 == Running
 
@@ -69,7 +56,7 @@ or
 camping hurl.rb
 
 In production mode:
-see rv and RV2 notes
+see rv notes
 
 == Test
 
@@ -80,12 +67,12 @@ autotest
 
 == LICENSE:
 
-rv_harness.rb and rv_harness2.rb are AFL licensed works dervived from
-Evan Weaver.  Everything else is MIT
+rv_harness.rb are AFL licensed works derived from Evan Weaver.
+Everything else is MIT
 
 (The MIT License)
 
-Copyright (c) 2007 FIX
+Copyright (c) 2007, 2008 Mike Mondragon (mikemondragon@gmail.com)
 
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the

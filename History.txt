@@ -1,3 +1,6 @@
+== 2.0.0 / 2008-05-02
+* complete refactor
+
 == 1.0.0 / 2007-07-04
 
 * 1 major enhancement

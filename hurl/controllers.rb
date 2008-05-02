@@ -66,11 +66,10 @@ module Hurl::Controllers
   class Api < R '/api'
 
     ##
-    # myOpenID authentication will come back to /api as GET so just bump back
-    # to root '/'
+    # get is same as post, used by javascript helper and myopenid redirect
 
     def get
-      redirect '/'
+      post
     end
 
     ##

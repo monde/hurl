@@ -11,6 +11,23 @@ include Hurl::Controllers
 
 class TestHurl < Camping::FunctionalTest
 
+  def test_get_it_should_redirect_to_root
+    get '/it'
+    assert_response :redirect
+    assert_equal @response.headers['Location'].to_s, 'http://test.host/hurl/'
+  end
+
+  def test_first_get_should_create_it_token
+    Url.delete_all
+
+    assert_equal 0, Url.count(:conditions => {:key => 'it'.alphadecimal})
+    assert_difference(Url, :count, 1) do 
+      get '/foo'
+    end
+    assert_equal 1, Url.count(:conditions => {:key => 'it'.alphadecimal})
+  end
+
+
   def test_default_index_should_have_form
     get 
     assert_response :success

@@ -16,8 +16,8 @@ module Hurl::Controllers
   def base_url
     # put a premium on Apache proxy headers, add others to your liking
 
-    if @env['HTTP_X_FORWARDED_HOST']
-      "http://#{@env['HTTP_X_FORWARDED_HOST']}/"
+    if env.HTTP_X_FORWARDED_HOST
+      "http://#{env.HTTP_X_FORWARDED_HOST}/"
     else
       "http:#{self.URL}"
     end
@@ -145,6 +145,9 @@ end
 
     def get(token)
 
+      create_it unless @it
+      redirect base_url and return if token == 'it'
+
       begin
         hurl = Url.find_by_token(token, env)
       rescue ActiveRecord::RecordNotFound => err
@@ -164,6 +167,13 @@ end
           redirect hurl.url
         end
       end
+    end
+
+    private
+
+    def create_it
+      @it ||= Url.find(:first, :conditions => {:key => 'it'.alphadecimal})
+      @it = Url.create!(:key => 'it'.alphadecimal, :url => "#{base_url}it") unless @it
     end
   end
 

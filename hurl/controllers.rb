@@ -65,8 +65,6 @@ module Hurl::Controllers
 
   class Api < R '/api'
 
-    include Parkpass
-
     ##
     # myOpenID authentication will come back to /api as GET so just bump back
     # to root '/'
@@ -80,13 +78,11 @@ module Hurl::Controllers
 
     def post
 
-# XXX PUT POST TIMER HERE
+      # XXX FIXME can I get a post timer?
 
-      return exit_with_error("401", "OpenID Authenticaiton Required") unless authenticate_with_open_id
-
-      # bad or spam input
       url = URI.parse(@input[:url]) rescue nil
 
+      # bad or spam input
       return exit_with_error("400", "Invalid url parameter") if url.nil? || url.host.nil?
 
       @input = url
